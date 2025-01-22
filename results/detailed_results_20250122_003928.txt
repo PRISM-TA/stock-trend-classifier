@@ -1,0 +1,16 @@
+Summary Statistics:
+Period: 1997-08-30 00:00:00 to 1997-10-28 00:00:00
+Total predictions: 60
+Overall accuracy: 0.7833
+
+Predictions by class:
+Class 1: 38
+Class 0: 22
+
+Actual labels by class:
+Class 1.0: 43
+Class 0.0: 17
+
+Confusion Matrix:
+[[13  4]
+ [ 9 34]]
