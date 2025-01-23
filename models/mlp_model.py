@@ -243,19 +243,27 @@ def process_market_data(raw_data) -> pd.DataFrame:
     for period in [20, 50, 200]:
         col = f'sma_{period}'
         processed_data[f"{col}_sta"] = data[col].pct_change()
-        processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
-        processed_data[f'{col}_normalized'] = 2 * (
-            processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
-        ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        # processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
+        # processed_data[f'{col}_normalized'] = 2 * (
+        #     processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
+        # ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        
+    processed_data['sma_20_normalized'] = 50 * processed_data['sma_20_sta']
+    processed_data['sma_50_normalized'] = 60 * processed_data['sma_50_sta'] # 70
+    processed_data['sma_200_normalized'] = 80 * processed_data['sma_200_sta'] # 100
     
     # EMA
     for period in [20, 50, 200]:
         col = f'ema_{period}'
         processed_data[f"{col}_sta"] = data[col].pct_change()
-        processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
-        processed_data[f'{col}_normalized'] = 2 * (
-            processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
-        ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        # processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
+        # processed_data[f'{col}_normalized'] = 2 * (
+        #     processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
+        # ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        
+    processed_data['ema_20_normalized'] = 50 * processed_data['ema_20_sta']
+    processed_data['ema_50_normalized'] = 70 * processed_data['ema_50_sta']
+    processed_data['ema_200_normalized'] = 120 * processed_data['ema_200_sta']
     
     # MACD
     for component in ['line', 'signal', 'histogram']:
@@ -270,19 +278,22 @@ def process_market_data(raw_data) -> pd.DataFrame:
     for period in [10, 20, 30, 60]:
         col = f'rv_{period}'
         processed_data[f"{col}_sta"] = data[col].pct_change()
-        processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
-        processed_data[f'{col}_normalized'] = 2 * (
-            processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
-        ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1\
+        # processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
+        # processed_data[f'{col}_normalized'] = 2 * (
+        #     processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
+        # ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1\
             
     # HLS
     for period in [10, 20]:
         col = f'hls_{period}'
         processed_data[f"{col}_sta"] = data[col].pct_change()
-        processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
-        processed_data[f'{col}_normalized'] = 2 * (
-            processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
-        ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        # processed_data[f"{col}_sta_no_out"] = remove_outliers(processed_data[f"{col}_sta"])
+        # processed_data[f'{col}_normalized'] = 2 * (
+        #     processed_data[f'{col}_sta_no_out'] - processed_data[f'{col}_sta_no_out'].min()
+        # ) / (processed_data[f'{col}_sta_no_out'].max() - processed_data[f'{col}_sta_no_out'].min()) - 1
+        
+    processed_data['hls_10_normalized'] = 2 * (processed_data['hls_10_sta'])
+    processed_data['hls_20_normalized'] = 3 * (processed_data['hls_20_sta'])
     
     # Select final features
     final_features = [
@@ -290,7 +301,7 @@ def process_market_data(raw_data) -> pd.DataFrame:
         'sma_20_normalized', 'sma_50_normalized', 'sma_200_normalized',
         'ema_20_normalized', 'ema_50_normalized', 'ema_200_normalized',
         'macd_line_normalized', 'macd_signal_normalized', 'macd_histogram_normalized'
-        # 'rv_10_normalized', 'rv_20_normalized', 'rv_30_normalized', 'rv_60_normalized',
+        # 'rv_10_sta', 'rv_20_sta', 'rv_30_sta', 'rv_60_sta',
         # 'hls_10_normalized', 'hls_20_normalized'
     ]
     
@@ -311,7 +322,7 @@ def analyze_current_features(features_df, labels_df):
         'SMA': ['sma_20_normalized', 'sma_50_normalized', 'sma_200_normalized'],
         'EMA': ['ema_20_normalized', 'ema_50_normalized', 'ema_200_normalized'],
         'MACD': ['macd_line_normalized', 'macd_signal_normalized', 'macd_histogram_normalized']
-        # 'RV': ['rv_10_normalized', 'rv_20_normalized', 'rv_30_normalized', 'rv_60_normalized'],
+        # 'RV': ['rv_10_sta', 'rv_20_sta', 'rv_30_sta', 'rv_60_sta'],
         # 'HLS': ['hls_10_normalized', 'hls_20_normalized']
     }
     
@@ -616,8 +627,8 @@ def filter_by_min_samples(features_df, labels_df, min_samples=5, verbose=True):
 
 def rolling_window_training(db_session, 
                           ticker: str,
-                          start_date: str = None,  # Add start_date parameter
-                          end_date: str = None,    # Add end_date parameter 
+                          start_date: str = None,
+                          end_date: str = None,
                           train_window_size: int = 240,
                           predict_window_size: int = 20,
                           max_predictions: int = 60,
@@ -626,8 +637,9 @@ def rolling_window_training(db_session,
                           early_stopping_patience: int = 50) -> List[Dict]:
     """
     Args:
-        start_date: Optional start date in 'YYYY-MM-DD' format
-        end_date: Optional end date in 'YYYY-MM-DD' format
+        train_window_size: Training window in calendar days
+        predict_window_size: Number of days to predict trend for (e.g., 20 days ahead)
+        max_predictions: Maximum number of predictions to make
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
@@ -648,16 +660,18 @@ def rolling_window_training(db_session,
     db_start = date_range.min_date
     db_end = date_range.max_date
     
-    # Convert string dates to datetime if provided
+    # Convert string dates to datetime.date if provided as strings
     if start_date:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         # Ensure start_date is not before database start
         start_date = max(start_date, db_start)
     else:
         start_date = db_start
         
     if end_date:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
         # Ensure end_date is not after database end
         end_date = min(end_date, db_end)
     else:
@@ -666,33 +680,49 @@ def rolling_window_training(db_session,
     print(f"\nDatabase period: {db_start} to {db_end}")
     print(f"Selected period: {start_date} to {end_date}")
     
-    # Ensure we have enough data for training window
-    training_start = start_date
-    prediction_start = training_start + timedelta(days=train_window_size)
-    
-    if prediction_start >= end_date:
-        raise ValueError(f"Not enough data for training window of {train_window_size} days")
-    
-    results = []
-    current_date = prediction_start
-    predictions_made = 0
-    
-    # Create and train initial model
-    train_features_df, train_labels_df = get_data_for_period(
-        db_session, start_date, current_date, ticker
+    # Get valid trading days for testing period
+    valid_days_query = (
+        select(EquityIndicators.report_date)
+        .where(
+            EquityIndicators.ticker == ticker,
+            EquityIndicators.report_date.between(start_date, end_date),
+            EquityIndicators.rsi_14.isnot(None),
+            EquityIndicators.macd_12_26_9_line.isnot(None),
+            EquityIndicators.sma_20.isnot(None),
+            EquityIndicators.ema_20.isnot(None)
+        )
+        .order_by(EquityIndicators.report_date)
     )
     
-    scaler = StandardScaler()
-    train_features = scaler.fit_transform(train_features_df.values)
-    train_labels = train_labels_df['label'].values
+    valid_trading_days = [date[0] for date in db_session.execute(valid_days_query).fetchall()]
     
-    # Initialize model
-    model = MLPClassifier(input_size=train_features.shape[1]).to(device)
+    if not valid_trading_days:
+        raise ValueError("No valid trading days found")
     
-    while (current_date + timedelta(days=predict_window_size) <= end_date and 
-           predictions_made < max_predictions):  # NEW: Added condition
+    print(f"Found {len(valid_trading_days)} valid trading days")
+    
+    # Initialize for training
+    results = []
+    predictions_made = 0
+    
+    # Find the index where we can start making predictions
+    train_start_idx = 0
+    while (train_start_idx < len(valid_trading_days) and 
+           valid_trading_days[train_start_idx] < start_date + timedelta(days=train_window_size)):
+        train_start_idx += 1
+    
+    current_idx = train_start_idx
+    
+    while current_idx < len(valid_trading_days) and predictions_made < max_predictions:
         try:
-            print(f"\nMaking prediction for: {current_date}")
+            current_date = valid_trading_days[current_idx]
+            print(f"\nMaking prediction for trading day: {current_date}")
+            
+            # Get training data (using calendar days for window)
+            train_start = current_date - timedelta(days=train_window_size)
+            train_features_df, train_labels_df = get_data_for_period(
+                db_session, train_start, current_date, ticker
+            )
             
             # Get prediction period data
             pred_end_date = current_date + timedelta(days=predict_window_size)
@@ -700,25 +730,29 @@ def rolling_window_training(db_session,
                 db_session, current_date, pred_end_date, ticker
             )
             
-            if pred_features_df is None or len(pred_features_df) < 1:
-                print("No data available for prediction, moving to next day...")
-                current_date += timedelta(days=1)
+            if (train_features_df is None or len(train_features_df) < min_samples_per_class or 
+                pred_features_df is None or len(pred_features_df) < 1):
+                print("Insufficient data for training or prediction, skipping...")
+                current_idx += 1
                 continue
             
-            # Prepare prediction data
+            # Prepare data
+            scaler = StandardScaler()
+            train_features = scaler.fit_transform(train_features_df.values)
+            train_labels = train_labels_df['label'].values
             pred_features = scaler.transform(pred_features_df.values)
             pred_labels = pred_labels_df['label'].values
             
-            # Create datasets
+            # Create datasets and loaders
             train_dataset = MarketDataset(train_features, train_labels)
             pred_dataset = MarketDataset(pred_features, pred_labels)
             
-            # Create data loaders
             batch_size = min(32, len(train_dataset))
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
             pred_loader = DataLoader(pred_dataset, batch_size=1, shuffle=False)
             
             # Train model
+            model = MLPClassifier(input_size=train_features.shape[1]).to(device)
             class_weights = calculate_class_weights(train_labels)
             criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
             optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -741,31 +775,13 @@ def rolling_window_training(db_session,
                 'confidence': F.softmax(outputs, dim=1)[0][prediction].item()
             })
             
-            predictions_made += 1  # NEW: Increment counter
-            
-            # Update training window
-            train_end = current_date
-            train_start = train_end - timedelta(days=train_window_size)
-            new_train_features_df, new_train_labels_df = get_data_for_period(
-                db_session, train_start, train_end, ticker
-            )
-            
-            if new_train_features_df is not None and len(new_train_features_df) >= min_samples_per_class:
-                train_features = scaler.fit_transform(new_train_features_df.values)
-                train_labels = new_train_labels_df['label'].values
-            
-            # Move to next day
-            current_date += timedelta(days=1)
-            
-            # NEW: Early exit if we've made enough predictions
-            if predictions_made >= max_predictions:
-                print(f"\nReached maximum number of predictions ({max_predictions})")
-                break
+            predictions_made += 1
+            current_idx += 1
             
         except Exception as e:
             print(f"Error making prediction: {str(e)}")
             traceback.print_exc()
-            current_date += timedelta(days=1)
+            current_idx += 1
     
     # Calculate overall accuracy
     if results:

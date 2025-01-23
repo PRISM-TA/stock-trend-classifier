@@ -112,6 +112,7 @@ def main():
         'early_stopping_patience': 50,
         # Add date range parameters
         'start_date': '2010-01-01',  # Start of training period
+        # 'start_date': '1997-10-23',
         # 'start_date': None,
         'end_date': None,           # End of testing period (None for latest available)
     }
