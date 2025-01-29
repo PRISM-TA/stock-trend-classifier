@@ -12,6 +12,16 @@ from data.SupervisedClassifierDataset import SupClassifierDataset
 from utils.visualization import create_trend_visualization
 from sklearn.metrics import accuracy_score, confusion_matrix
 
+from dotenv import load_dotenv
+load_dotenv()
+
+db_session = create_db_session(
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
+    database=os.getenv("DB_NAME")
+)
+
 def check_data_availability(session, ticker):
     # Check market data
     market_query = select(
@@ -122,13 +132,7 @@ def main():
         print(f"{key}: {value}")
     
     try:
-        with create_db_session(
-            user="postgres.rcwgtecxhtgblwkmlbpu",
-            password="CSCI4998_TJ01",
-            host="aws-0-ap-southeast-1.pooler.supabase.com",
-            port="5432",
-            database="postgres"
-        ) as session:
+        with db_session() as session:
             print("\nChecking data availability...")
             market_result, indicators_result, labels_result = check_data_availability(session, params['ticker'])
             
