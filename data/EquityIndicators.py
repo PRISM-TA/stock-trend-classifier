@@ -50,6 +50,10 @@ class EquityIndicators(Base):
     hls_10 = Column(Float(4))
     hls_20 = Column(Float(4))
     obv = Column(BigInteger)
+    pct_5 = Column(Float(4)) # Add Percentage Change 
+    pct_20 = Column(Float(4)) # Add Percentage Change
+    pct_50 = Column(Float(4)) # Add Percentage Change
+    pct_200 = Column(Float(4)) # Add Percentage Change
 
     def __repr__(self):
         return f"<EquityIndicators(date={self.report_date}, ticker={self.ticker})>"
