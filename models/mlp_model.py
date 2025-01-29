@@ -16,6 +16,7 @@ from data.EquityIndicators import EquityIndicators
 from data.SupervisedClassifierDataset import SupClassifierDataset
 import traceback
 from collections import defaultdict
+from data.StaggeredTrainingParam import StaggeredTrainingParam
 
 class MarketDataset(Dataset):
     def __init__(self, features, labels):
@@ -363,9 +364,9 @@ def process_labels(raw_labels) -> pd.DataFrame:
     labels_data = []
     dates = []
     
-    for start_date, end_date, label in raw_labels:
-        labels_data.append({'label': label})
-        dates.append(start_date)
+    for item in raw_labels:
+        labels_data.append({'label': item.label})
+        dates.append(item.start_date)
     
     df = pd.DataFrame(labels_data, index=dates)
     return df
@@ -626,13 +627,13 @@ def filter_by_min_samples(features_df, labels_df, min_samples=5, verbose=True):
     return features_df[mask], labels_df[mask]
 
 def rolling_window_training(db_session, 
-                          ticker: str,
-                          start_date: str = None,
-                          end_date: str = None,
-                          train_window_size: int = 240,
-                          predict_window_size: int = 20,
-                          max_predictions: int = 60,
-                          min_samples_per_class: int = 2,
+                          ticker: str, #Which stock to train on
+                          start_date: str = None, #Start date for what?
+                          end_date: str = None, #End date for what?
+                          train_window_size: int = 240, #The number of days used for training
+                          predict_window_size: int = 20, #The number of days to predict for??
+                          max_predictions: int = 60, #The number of predictions to make
+                          min_samples_per_class: int = 2, # Why do we need this?
                           max_epochs: int = 100,
                           early_stopping_patience: int = 50) -> List[Dict]:
     """
@@ -656,7 +657,6 @@ def rolling_window_training(db_session,
     if not date_range or not date_range.min_date or not date_range.max_date:
         raise ValueError(f"No data found for ticker {ticker}")
 
-    # Handle custom date range
     db_start = date_range.min_date
     db_end = date_range.max_date
     
@@ -700,19 +700,21 @@ def rolling_window_training(db_session,
         raise ValueError("No valid trading days found")
     
     print(f"Found {len(valid_trading_days)} valid trading days")
-    
+    # =============================================================================
+    # ^^ This part should be wrapped into a function ^^
+
     # Initialize for training
     results = []
     predictions_made = 0
     
-    # Find the index where we can start making predictions
-    train_start_idx = 0
+    # Skip prediction until the first window size is reached
+    train_start_idx = 0 
     while (train_start_idx < len(valid_trading_days) and 
            valid_trading_days[train_start_idx] < start_date + timedelta(days=train_window_size)):
         train_start_idx += 1
     
     current_idx = train_start_idx
-    
+
     while current_idx < len(valid_trading_days) and predictions_made < max_predictions:
         try:
             current_date = valid_trading_days[current_idx]
@@ -797,3 +799,109 @@ def rolling_window_training(db_session,
         print(conf_matrix)
     
     return results
+
+
+def staggered_training(session, param: StaggeredTrainingParam):
+    def get_data(session, offset, count, ticker):
+        with session() as session:
+            query = (
+                select(MarketData, EquityIndicators, SupClassifierDataset)
+                .join(
+                    EquityIndicators,
+                    (MarketData.ticker == EquityIndicators.ticker) &
+                    (MarketData.report_date == EquityIndicators.report_date)
+                ).join(
+                    SupClassifierDataset,
+                    (MarketData.ticker == SupClassifierDataset.ticker) &
+                    (MarketData.report_date == SupClassifierDataset.end_date)
+                )
+                .where(MarketData.ticker == ticker)
+                .order_by(MarketData.report_date)
+                .offset(offset)
+                .limit(count)
+            )
+            query_result = session.execute(query).all()
+            # print(f"[DEBUG] query_result: {repr(query_result)}")
+            feature_df = process_market_data([(record[0], record[1]) for record in query_result])
+            labels_df = process_labels([(record[2]) for record in query_result])
+            return feature_df, labels_df
+
+    def scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df):
+        scaler = StandardScaler()
+        train_features = scaler.fit_transform(feat_train_df.values)
+        train_labels = label_train_df['label'].values
+        pred_features = scaler.transform(feat_pred_df.values)
+        pred_labels = label_pred_df['label'].values
+        return train_features, train_labels, pred_features, pred_labels
+
+    def create_dataloader(train_features, train_labels, pred_features, pred_labels, min_batch_size=32):
+        train_dataset = MarketDataset(train_features, train_labels)
+        pred_dataset = MarketDataset(pred_features, pred_labels)
+        batch_size = min(min_batch_size, len(train_dataset))
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+        pred_loader = DataLoader(pred_dataset, batch_size=1, shuffle=False)
+        return train_loader, pred_loader
+    
+    def get_available_data_count(session, ticker):
+        with session() as session:
+            query = (
+                select(
+                    func.count(MarketData.report_date)
+                ).where(MarketData.ticker == ticker)
+            )
+            query_result = session.execute(query).all()
+            print(f"[DEBUG] available_data_count for {ticker}: {query_result[0][0]}")
+            return query_result[0][0]
+    
+    max_epochs = 1000
+    prediction_result_list = []
+
+    available_data_count = get_available_data_count(session, param.ticker) - param.training_day_count
+    if available_data_count < 0:
+        print(f"[DEBUG] Not enough training data available for {param.ticker}")
+    training_offset = 0
+    prediction_offset = param.training_day_count
+
+    while available_data_count > param.prediction_day_count:
+        print(f"[DEBUG] Available data count: {available_data_count}")
+        print(f"[DEBUG] Training on {param.ticker} from {training_offset} to {prediction_offset}")
+        print(f"[DEBUG] Testing on {param.ticker} from {prediction_offset} to {prediction_offset + param.prediction_day_count}")
+
+        feat_train_df, label_train_df = get_data(session, training_offset, param.training_day_count, param.ticker)
+        feat_pred_df, label_pred_df = get_data(session, prediction_offset, param.prediction_day_count, param.ticker)
+        train_features, train_labels, pred_features, pred_labels = scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df)
+        train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = MLPClassifier(input_size=train_features.shape[1]).to(device)
+        class_weights = calculate_class_weights(train_labels)
+        criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
+        # criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+        model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
+
+        model.eval()
+        predictions = []
+        actual_labels = []
+        with torch.no_grad():
+            for features, labels in pred_loader:
+                features = features.to(device)
+                outputs = model(features)
+                prediction = torch.argmax(outputs, dim=1).item()
+                predictions.append(prediction)
+                actual_labels.append(labels.item())
+                print(f"Prediction: {prediction}, Actual Label: {labels.item()}")
+
+        prediction_result = {
+            'predictions': predictions,
+            'actual_labels': actual_labels,
+            'training_offset': training_offset,
+            'prediction_offset': prediction_offset
+        }
+        prediction_result_list.append(prediction_result)
+
+        training_offset+=param.prediction_day_count
+        prediction_offset+=param.prediction_day_count
+        available_data_count-=param.prediction_day_count
+    
+    return prediction_result_list
