@@ -10,8 +10,8 @@ import warnings
 from sklearn.metrics import recall_score, precision_score, f1_score, confusion_matrix
 from sklearn.exceptions import UndefinedMetricWarning
 from sqlalchemy import select
-from data.SupervisedClassifierDataset import SupClassifierDataset  # Update import path as needed
-from data.MarketData import MarketData  # Update import path as needed
+from data_models.SupervisedClassifierDataset import SupClassifierDataset
+from data_models.MarketData import MarketData 
 
 # Suppress the specific warning
 warnings.filterwarnings('ignore', category=UndefinedMetricWarning)
