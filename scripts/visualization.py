@@ -1,3 +1,5 @@
+### This is to visualize the stock price graph with the real and predicted labels
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns

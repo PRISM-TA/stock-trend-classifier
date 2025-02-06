@@ -20,7 +20,7 @@ def remove_outliers(df):
     upper_bound = Q3 + 1.5 * IQR
     return df[~((df < lower_bound) | (df > upper_bound))]
 
-def process_market_data(raw_data) -> pd.DataFrame:
+def process_equity_indicators(raw_data) -> pd.DataFrame:
     """Process market data using existing preprocessing"""
     # Convert raw_data to DataFrame first
     data = pd.DataFrame([{
@@ -124,3 +124,16 @@ def process_market_data(raw_data) -> pd.DataFrame:
     # Handle any NaN values
     result = processed_data[final_features].fillna(0)
     return result
+
+
+def process_labels(raw_labels) -> pd.DataFrame:
+    """Process raw labels into labels DataFrame"""
+    labels_data = []
+    dates = []
+    
+    for item in raw_labels:
+        labels_data.append({'label': item.label})
+        dates.append(item.start_date)
+    
+    df = pd.DataFrame(labels_data, index=dates)
+    return df

@@ -15,7 +15,7 @@ from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
-from lib.data_preprocessing import process_market_data
+from lib.data_preprocessing import process_labels, process_equity_indicators
 import traceback
 from collections import defaultdict
 
@@ -76,19 +76,6 @@ def calculate_class_weights(labels):
         class_weights = torch.ones(len(class_counts)) / len(class_counts)
 
     return class_weights
-
-
-def process_labels(raw_labels) -> pd.DataFrame:
-    """Process raw labels into labels DataFrame"""
-    labels_data = []
-    dates = []
-    
-    for item in raw_labels:
-        labels_data.append({'label': item.label})
-        dates.append(item.start_date)
-    
-    df = pd.DataFrame(labels_data, index=dates)
-    return df
 
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs=100, patience=50):
@@ -269,7 +256,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
                     .limit(count))
                     
             query_result = session.execute(query).all()
-            feature_df = process_market_data([(record[0], record[1]) for record in query_result])
+            feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
             labels_df = process_labels([(record[2]) for record in query_result])
             return feature_df, labels_df
         

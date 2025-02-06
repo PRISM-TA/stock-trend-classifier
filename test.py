@@ -38,7 +38,7 @@ def main():
     )
     
     model_name = "MLP"
-    feature_set = "processed technical indicators"
+    feature_set = "Processed technical indicators"
 
     print("\nStarting training and prediction process...")
     try:
