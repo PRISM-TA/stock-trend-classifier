@@ -7,17 +7,8 @@ import pandas as pd
 
     
 def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
-    """
-    Upload batch classifier results to database.
-    
-    Args:
-        classifier_result_list: List of dictionaries containing trend probabilities, predictions and metadata
-        ticker: Stock ticker symbol
-        db_session: Database session context manager
-    """
     try:
         with db_session() as session:
-            # Get dates and actual labels for predictions
             query = (
                 select(
                     MarketData.report_date,
@@ -39,7 +30,6 @@ def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
             dates_and_labels = session.execute(query).all()
             print(f"Retrieved {len(dates_and_labels)} dates from database")
 
-            # Delete existing records for this ticker
             deleted_count = session.query(ClassifierResult)\
                                  .filter(ClassifierResult.ticker == ticker,
                                      ClassifierResult.model == classifier_result_list[0]['model'],
@@ -47,16 +37,15 @@ def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
                                  .delete()
             print(f"Deleted {deleted_count} existing records for ticker {ticker}, model {classifier_result_list[0]['model']} and feature set {classifier_result_list[0]['feature_set']}")
 
-            # Create new records
             all_predictions = []
-            current_offset = 0
+            total_correct = 0
+            total_predictions = 0
             
             for window_result in classifier_result_list:
                 predictions = window_result['predictions']
                 probabilities = window_result['probabilities']
                 pred_offset = window_result['prediction_offset']
                 
-                # Get the relevant dates for this window
                 window_dates = dates_and_labels[pred_offset:pred_offset + len(predictions)]
                 
                 for (pred_date, actual_label), pred_value, probs in zip(window_dates, predictions, probabilities):
@@ -72,12 +61,18 @@ def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
                         actual_label=int(actual_label)
                     )
                     all_predictions.append(record)
+                    
+                    # Update accuracy counters
+                    if int(pred_value) == int(actual_label):
+                        total_correct += 1
+                    total_predictions += 1
 
-            # Bulk insert new records
             session.bulk_save_objects(all_predictions)
             session.commit()
             
+            accuracy = (total_correct / total_predictions * 100) if total_predictions > 0 else 0
             print(f"Successfully uploaded {len(all_predictions)} predictions across {len(classifier_result_list)} windows")
+            print(f"Total Accuracy: {accuracy:.2f}% ({total_correct}/{total_predictions} correct predictions)")
             return True
             
     except Exception as e:

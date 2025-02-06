@@ -15,7 +15,7 @@ from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
-from lib.data_preprocessing import process_labels, process_equity_indicators
+from lib.data_preprocessing import process_labels, process_equity_indicators, process_raw_market_data
 import traceback
 from collections import defaultdict
 
@@ -236,28 +236,53 @@ def analyze_features(features_df, labels_df):
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
+            ### Processed equity indicators + Labels
+            # query = (
+            #     select(MarketData, EquityIndicators, SupClassifierDataset)
+            #     .join(
+            #         EquityIndicators,
+            #         (MarketData.ticker == EquityIndicators.ticker) &
+            #         (MarketData.report_date == EquityIndicators.report_date)
+            #     ).join(
+            #         SupClassifierDataset,
+            #         (MarketData.ticker == SupClassifierDataset.ticker) &
+            #         (MarketData.report_date == SupClassifierDataset.end_date)
+            #     )
+            #     .where(MarketData.ticker == ticker)
+            # )
+               
+            # query = (query
+            #         .order_by(MarketData.report_date)
+            #         .offset(offset)
+            #         .limit(count))
+                    
+            # query_result = session.execute(query).all()
+            # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
+            # labels_df = process_labels([(record[2]) for record in query_result])
+            
+            ### Raw market data + Labels
             query = (
-                select(MarketData, EquityIndicators, SupClassifierDataset)
+                select(MarketData, SupClassifierDataset)
                 .join(
-                    EquityIndicators,
-                    (MarketData.ticker == EquityIndicators.ticker) &
-                    (MarketData.report_date == EquityIndicators.report_date)
-                ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
                     (MarketData.report_date == SupClassifierDataset.end_date)
                 )
                 .where(MarketData.ticker == ticker)
             )
-               
+            
             query = (query
                     .order_by(MarketData.report_date)
                     .offset(offset)
                     .limit(count))
                     
             query_result = session.execute(query).all()
-            feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
-            labels_df = process_labels([(record[2]) for record in query_result])
+            market_data = [record[0] for record in query_result]
+            labels = [record[1] for record in query_result]
+
+            feature_df = process_raw_market_data(market_data, lookback_days=4)
+            labels_df = process_labels(labels)
+            
             return feature_df, labels_df
         
 
