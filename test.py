@@ -1,5 +1,6 @@
 from lib.mlp_model import staggered_training
-from lib.result_handler import upload_prediction_results_batch
+# from lib.prediction_results_handler import upload_prediction_results_batch
+from lib.classifier_result_handler import upload_classifier_result_batch
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
 from db.session import create_db_session
 from data_models.PredictionResults import Base
@@ -35,29 +36,33 @@ def main():
         prediction_day_count=60,
         ticker='AAPL'
     )
+    
+    model_name = "MLP"
+    feature_set = "processed technical indicators"
 
     print("\nStarting training and prediction process...")
     try:
-        # Get all prediction results
-        prediction_results = staggered_training(db_session, param)
+        # Get all classifier results
+        classifier_result = staggered_training(db_session, param, model_name=model_name,
+        feature_set=feature_set)
         
-        if not prediction_results:
+        if not classifier_result:
             print("No prediction results generated")
             return
             
-        print(f"\nTraining complete. Got results for {len(prediction_results)} windows")
+        print(f"\nTraining complete. Got results for {len(classifier_result)} windows")
         
-        # Upload all results at once
-        success = upload_prediction_results_batch(
-            prediction_results_list=prediction_results,
+        # Upload all classifier results at once
+        success = upload_classifier_result_batch(
+            classifier_result_list=classifier_result,
             ticker=param.ticker,
             db_session=db_session
         )
         
         if success:
-            print("\nSuccessfully uploaded all predictions to database")
+            print("\nSuccessfully uploaded all results to database")
         else:
-            print("\nFailed to upload predictions to database")
+            print("\nFailed to upload results to database")
             
     except KeyboardInterrupt:
         print("\nProcess interrupted by user")
