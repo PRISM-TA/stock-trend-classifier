@@ -1,14 +1,4 @@
 
-First 5 predictions:
-Actual: 2, Predicted: 2
-Actual: 2, Predicted: 2
-Actual: 2, Predicted: 2
-Actual: 2, Predicted: 2
-Actual: 2, Predicted: 2
-
-Unique actual labels: [0 1 2]
-Unique predicted labels: [0 1 2]
-
 ==================================================
 Results Analysis for AAPL
 Model: MLP
