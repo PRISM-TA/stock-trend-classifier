@@ -1,20 +1,34 @@
 from lib.mlp_model import staggered_training
+from lib.result_handler import upload_prediction_results_batch
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
 from db.session import create_db_session
-from lib.result_handler import initialize_results_file, store_window_results
-import os
-import pandas as pd
+from data_models.PredictionResults import Base
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+import os
+
+def create_tables(db_session):
+    """Create all tables in the database"""
+    # Create engine directly using the same parameters
+    engine = create_engine(
+        f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+    )
+    Base.metadata.create_all(engine)
 
 def main():
     load_dotenv()
     
+    # Create database session
     db_session = create_db_session(
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         host=os.getenv("DB_HOST"),
         database=os.getenv("DB_NAME")
     )
+    
+    # Create tables if they don't exist
+    print("[DEBUG] Creating database tables if they don't exist")
+    create_tables(db_session)
 
     param = StaggeredTrainingParam(
         training_day_count=240,
@@ -22,24 +36,35 @@ def main():
         ticker='AAPL'
     )
 
-    csv_filename = initialize_results_file(param.ticker)
-    print(f"Results will be saved to: {csv_filename}")
     print("\nStarting training and prediction process...")
-    
-    for window_num, window_results in enumerate(staggered_training(db_session, param), 1):
-        store_window_results(
-            session_factory=db_session,
-            window_num=window_num,
-            prediction_results=window_results,
+    try:
+        # Get all prediction results
+        prediction_results = staggered_training(db_session, param)
+        
+        if not prediction_results:
+            print("No prediction results generated")
+            return
+            
+        print(f"\nTraining complete. Got results for {len(prediction_results)} windows")
+        
+        # Upload all results at once
+        success = upload_prediction_results_batch(
+            prediction_results_list=prediction_results,
             ticker=param.ticker,
-            csv_filename=csv_filename
+            db_session=db_session
         )
-
-    final_results = pd.read_csv(csv_filename)
-    final_accuracy = (final_results['actual_trend'] == final_results['predicted_trend']).mean()
-    print(f"\nTraining completed!")
-    print(f"Total predictions: {len(final_results)}")
-    print(f"Final accuracy: {final_accuracy:.2%}")
+        
+        if success:
+            print("\nSuccessfully uploaded all predictions to database")
+        else:
+            print("\nFailed to upload predictions to database")
+            
+    except KeyboardInterrupt:
+        print("\nProcess interrupted by user")
+    except Exception as e:
+        print(f"\nUnexpected error: {str(e)}")
+    finally:
+        print("\nProcessing complete")
 
 if __name__ == "__main__":
     main()

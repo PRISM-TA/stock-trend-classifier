@@ -304,22 +304,79 @@ def staggered_training(session, param: StaggeredTrainingParam):
             return query_result[0][0]
     
     max_epochs = 1000
-    # Remove prediction_result_list = [] as we'll yield results instead
+    
+    # available_data_count = get_available_data_count(session, param.ticker) - param.training_day_count
+    # if available_data_count < 0:
+    #     print(f"[DEBUG] Not enough training data available for {param.ticker}")
+    #     return
+        
+    # training_offset = 0
+    # prediction_offset = param.training_day_count
+    # window_num = 1
+
+    # while available_data_count > param.prediction_day_count:
+    #     print(f"\n[DEBUG] Processing Window {window_num}")
+    #     print(f"[DEBUG] Available data count: {available_data_count}")
+    #     print(f"[DEBUG] Training on {param.ticker} from {training_offset} to {prediction_offset}")
+    #     print(f"[DEBUG] Testing on {param.ticker} from {prediction_offset} to {prediction_offset + param.prediction_day_count}")
+
+    #     feat_train_df, label_train_df = get_data(session, training_offset, param.training_day_count, param.ticker)
+    #     feat_pred_df, label_pred_df = get_data(session, prediction_offset, param.prediction_day_count, param.ticker)
+    #     train_features, train_labels, pred_features, pred_labels = scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df)
+    #     train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
+
+    #     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #     model = MLPClassifier(input_size=train_features.shape[1]).to(device)
+    #     class_weights = calculate_class_weights(train_labels)
+    #     criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
+    #     optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+    #     model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
+
+    #     model.eval()
+    #     predictions = []
+    #     actual_labels = []
+    #     with torch.no_grad():
+    #         for features, labels in pred_loader:
+    #             features = features.to(device)
+    #             outputs = model(features)
+    #             prediction = torch.argmax(outputs, dim=1).item()
+    #             predictions.append(prediction)
+    #             actual_labels.append(labels.item())
+    #             print(f"Prediction: {prediction}, Actual Label: {labels.item()}")
+
+    #     prediction_result = {
+    #         'predictions': predictions,
+    #         'actual_labels': actual_labels,
+    #         'training_offset': training_offset,
+    #         'prediction_offset': prediction_offset
+    #     }
+        
+    #     # Yield each window's results immediately instead of collecting them
+    #     yield prediction_result
+
+    #     training_offset += param.prediction_day_count
+    #     prediction_offset += param.prediction_day_count
+    #     available_data_count -= param.prediction_day_count
+    #     window_num += 1
+        
+        
+        
+        
+    prediction_result_list = []
 
     available_data_count = get_available_data_count(session, param.ticker) - param.training_day_count
-    
+    if available_data_count < 0:
+        print(f"[DEBUG] Not enough training data available for {param.ticker}")
     training_offset = 0
     prediction_offset = param.training_day_count
 
-    window_count = (available_data_count - param.prediction_day_count) // 1 + 1
-    print(f"Will process {window_count} windows")
-
     while available_data_count > param.prediction_day_count:
-        print(f"\nProcessing window with training offset: {training_offset}, prediction offset: {prediction_offset}")
-        
+        print(f"[DEBUG] Available data count: {available_data_count}")
+        print(f"[DEBUG] Training on {param.ticker} from {training_offset} to {prediction_offset}")
+        print(f"[DEBUG] Testing on {param.ticker} from {prediction_offset} to {prediction_offset + param.prediction_day_count}")
+
         feat_train_df, label_train_df = get_data(session, training_offset, param.training_day_count, param.ticker)
         feat_pred_df, label_pred_df = get_data(session, prediction_offset, param.prediction_day_count, param.ticker)
-
         train_features, train_labels, pred_features, pred_labels = scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df)
         train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
 
@@ -327,6 +384,7 @@ def staggered_training(session, param: StaggeredTrainingParam):
         model = MLPClassifier(input_size=train_features.shape[1]).to(device)
         class_weights = calculate_class_weights(train_labels)
         criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
+        # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
         model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
 
@@ -342,17 +400,16 @@ def staggered_training(session, param: StaggeredTrainingParam):
                 actual_labels.append(labels.item())
                 print(f"Prediction: {prediction}, Actual Label: {labels.item()}")
 
-        # Instead of appending to list, yield the result immediately
-        yield {
+        prediction_result = {
             'predictions': predictions,
             'actual_labels': actual_labels,
             'training_offset': training_offset,
             'prediction_offset': prediction_offset
         }
+        prediction_result_list.append(prediction_result)
 
-        # Key window movement logic
         training_offset+=param.prediction_day_count
         prediction_offset+=param.prediction_day_count
         available_data_count-=param.prediction_day_count
     
-    # Remove return prediction_result_list as we're yielding results
+    return prediction_result_list
