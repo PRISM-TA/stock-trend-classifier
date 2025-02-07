@@ -6,7 +6,7 @@ import pandas as pd
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
-from data_models import MarketDataset
+from data_models.MarketDataset import MarketDataset
 from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
