@@ -1,28 +1,17 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
 import pandas as pd
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
+from data_models import MarketDataset
 from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
 from lib.data_preprocessing import process_labels, process_raw_equity_indicators, process_raw_market_data
-
-
-class MarketDataset(Dataset):
-    def __init__(self, features, labels):
-        self.features = torch.FloatTensor(features)
-        self.labels = torch.LongTensor(labels)
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, idx):
-        return self.features[idx], self.labels[idx]
 
     
 class MLPClassifier(nn.Module):
