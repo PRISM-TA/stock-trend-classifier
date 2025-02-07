@@ -236,7 +236,7 @@ def analyze_features(features_df, labels_df):
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
-            ### Processed equity indicators + Labels
+            ### Processed technical indicators
             # query = (
             #     select(MarketData, EquityIndicators, SupClassifierDataset)
             #     .join(
