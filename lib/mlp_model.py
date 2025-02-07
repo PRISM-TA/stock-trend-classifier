@@ -1,23 +1,16 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.utils.class_weight import compute_class_weight
-from typing import Tuple, List, Dict
-import warnings
+from sklearn.metrics import classification_report, confusion_matrix
 from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
-from lib.data_preprocessing import process_labels, process_raw_equity_indicators, process_equity_indicators, process_raw_market_data
-import traceback
-from collections import defaultdict
+from lib.data_preprocessing import process_labels, process_raw_equity_indicators, process_raw_market_data
 
 
 class MarketDataset(Dataset):
@@ -76,7 +69,6 @@ def calculate_class_weights(labels):
         class_weights = torch.ones(len(class_counts)) / len(class_counts)
 
     return class_weights
-
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs=100, patience=50):
     best_loss = float('inf')
@@ -157,7 +149,6 @@ def evaluate_model(model, test_loader, device):
     
     return report, conf_matrix
 
-
 def analyze_features(features_df, labels_df):
     """Comprehensive analysis of features and their relationships to trend states"""
     print("\nAnalyzing feature relationships...")
@@ -231,7 +222,6 @@ def analyze_features(features_df, labels_df):
         print(f"{feature}: {importance:.4f}")
     
     return analysis_results, feature_importance
-
 
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):

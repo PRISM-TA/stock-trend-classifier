@@ -188,7 +188,6 @@ def process_raw_market_data(market_data_records, lookback_days=20) -> pd.DataFra
     
     return result_df.dropna()
     
-
 def process_labels(raw_labels) -> pd.DataFrame:
     """Process raw labels into labels DataFrame"""
     labels_data = []
