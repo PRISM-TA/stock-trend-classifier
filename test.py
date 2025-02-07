@@ -1,5 +1,4 @@
 from lib.mlp_model import staggered_training
-# from lib.prediction_results_handler import upload_prediction_results_batch
 from lib.classifier_result_handler import upload_classifier_result_batch
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
 from db.session import create_db_session
@@ -34,12 +33,12 @@ def main():
     param = StaggeredTrainingParam(
         training_day_count=240,
         prediction_day_count=60,
-        ticker='AAPL'
+        ticker='UNH'
     )
     
     model_name = "MLP"
     # feature_set = "Processed technical indicators"
-    feature_set = "Raw market data + manual labels"
+    feature_set = "Raw market data (20 days)"
 
     print("\nStarting training and prediction process...")
     try:

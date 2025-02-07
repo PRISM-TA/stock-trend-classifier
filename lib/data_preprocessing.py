@@ -125,21 +125,12 @@ def process_equity_indicators(raw_data) -> pd.DataFrame:
     result = processed_data[final_features].fillna(0)
     return result
 
-def process_raw_market_data(market_data_records, lookback_days=4):
+def process_raw_market_data(market_data_records, lookback_days=20) -> pd.DataFrame:
     """
     Process raw market data into a DataFrame with lookback days.
-    
-    Args:
-        market_data_records: List of MarketData records
-        lookback_days: Number of previous days to include
-    
-    Returns:
-        DataFrame with features formatted as: 
-        [open_t, close_t, low_t, high_t, volume_t, 
-         open_t-1, close_t-1, low_t-1, high_t-1, volume_t-1, ...]
     """
-    # Convert records to DataFrame
-    df = pd.DataFrame([{
+    # Create base DataFrame
+    base_df = pd.DataFrame([{
         'report_date': record.report_date,
         'open': record.open,
         'close': record.close,
@@ -149,15 +140,23 @@ def process_raw_market_data(market_data_records, lookback_days=4):
     } for record in market_data_records])
     
     # Sort by date
-    df = df.sort_values('report_date')
-    feature_columns = []
+    base_df = base_df.sort_values('report_date')
+    
+    # Create list of DataFrames to concatenate
+    dfs_to_concat = []
+    cols = ['open', 'close', 'low', 'high', 'volume']
+    
     for i in range(lookback_days):
         day_suffix = f"_t-{i}" if i > 0 else "_t"
-        for col in ['open', 'close', 'low', 'high', 'volume']:
-            df[f'{col}{day_suffix}'] = df[col].shift(i)
-            feature_columns.append(f'{col}{day_suffix}')
+        temp_df = base_df[cols].shift(i).rename(
+            columns={col: f'{col}{day_suffix}' for col in cols}
+        )
+        dfs_to_concat.append(temp_df)
     
-    return df[feature_columns].dropna()
+    # Concatenate all features at once
+    result_df = pd.concat(dfs_to_concat, axis=1)
+    
+    return result_df.dropna()
     
 
 def process_labels(raw_labels) -> pd.DataFrame:

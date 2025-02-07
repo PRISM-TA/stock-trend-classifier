@@ -260,7 +260,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
             # labels_df = process_labels([(record[2]) for record in query_result])
             
-            ### Raw market data + Labels
+            ### Raw market data
             query = (
                 select(MarketData, SupClassifierDataset)
                 .join(
@@ -280,7 +280,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             market_data = [record[0] for record in query_result]
             labels = [record[1] for record in query_result]
 
-            feature_df = process_raw_market_data(market_data, lookback_days=4)
+            feature_df = process_raw_market_data(market_data, lookback_days=20)
             labels_df = process_labels(labels)
             
             return feature_df, labels_df
