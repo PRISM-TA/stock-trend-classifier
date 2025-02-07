@@ -2,18 +2,8 @@ from lib.mlp_model import staggered_training
 from lib.classifier_result_handler import upload_classifier_result_batch
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
 from db.session import create_db_session
-from data_models.ClassifierResult import Base
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 import os
-
-def create_tables(db_session):
-    """Create all tables in the database"""
-    # Create engine directly using the same parameters
-    engine = create_engine(
-        f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-    )
-    Base.metadata.create_all(engine)
 
 def main():
     load_dotenv()
@@ -25,10 +15,6 @@ def main():
         host=os.getenv("DB_HOST"),
         database=os.getenv("DB_NAME")
     )
-    
-    # Create tables if they don't exist
-    print("[DEBUG] Creating database tables if they don't exist")
-    create_tables(db_session)
 
     param = StaggeredTrainingParam(
         training_day_count=240,
@@ -41,35 +27,29 @@ def main():
     feature_set = "Raw market data (20 days) + raw technical indicators"
 
     print("\nStarting training and prediction process...")
-    try:
-        # Get all classifier results
-        classifier_result = staggered_training(db_session, param, model_name=model_name,
-        feature_set=feature_set)
+    # Get all classifier results
+    classifier_result = staggered_training(db_session, param, model_name=model_name,
+    feature_set=feature_set)
+    
+    if not classifier_result:
+        print("No prediction results generated")
+        return
         
-        if not classifier_result:
-            print("No prediction results generated")
-            return
-            
-        print(f"\nTraining complete. Got results for {len(classifier_result)} windows")
-        
-        # Upload all classifier results at once
-        success = upload_classifier_result_batch(
-            classifier_result_list=classifier_result,
-            ticker=param.ticker,
-            db_session=db_session
-        )
-        
-        if success:
-            print("\nSuccessfully uploaded all results to database")
-        else:
-            print("\nFailed to upload results to database")
-            
-    except KeyboardInterrupt:
-        print("\nProcess interrupted by user")
-    except Exception as e:
-        print(f"\nUnexpected error: {str(e)}")
-    finally:
-        print("\nProcessing complete")
+    print(f"\nTraining complete. Got results for {len(classifier_result)} windows")
+    
+    # Upload all classifier results at once
+    success = upload_classifier_result_batch(
+        classifier_result_list=classifier_result,
+        ticker=param.ticker,
+        db_session=db_session
+    )
+    
+    if success:
+        print("\nSuccessfully uploaded all results to database")
+    else:
+        print("\nFailed to upload results to database")
+
+    print("\nProcessing complete")
 
 if __name__ == "__main__":
     main()
