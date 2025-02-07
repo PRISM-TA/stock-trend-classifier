@@ -12,6 +12,50 @@ import scipy.stats as stats
 import traceback
 from collections import defaultdict
 
+def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
+    """Process raw technical indicators into a DataFrame"""
+    # Convert raw_data to DataFrame first
+    data = pd.DataFrame([{
+        'report_date': record[0].report_date,
+        'rsi_9': record[1].rsi_9,
+        'rsi_14': record[1].rsi_14,
+        'rsi_20': record[1].rsi_20,
+        'sma_20': record[1].sma_20,
+        'sma_50': record[1].sma_50,
+        'sma_200': record[1].sma_200,
+        'ema_20': record[1].ema_20,
+        'ema_50': record[1].ema_50,
+        'ema_200': record[1].ema_200,
+        'macd_12_26_9_line': record[1].macd_12_26_9_line,
+        'macd_12_26_9_signal': record[1].macd_12_26_9_signal,
+        'macd_12_26_9_histogram': record[1].macd_12_26_9_histogram,
+        'rv_10': record[1].rv_10,
+        'rv_20': record[1].rv_20,
+        'rv_30': record[1].rv_30,
+        'rv_60': record[1].rv_60,
+        'hls_10': record[1].hls_10,
+        'hls_20': record[1].hls_20
+    } for record in raw_data])
+    
+    data.set_index('report_date', inplace=True)
+    
+    # Initialize processed data DataFrame
+    processed_data = pd.DataFrame(index=data.index)
+    
+    # Preprocessed features
+    final_features = [
+        'rsi_9', 'rsi_14', 'rsi_20',
+        'sma_20', 'sma_50', 'sma_200',
+        'ema_20', 'ema_50', 'ema_200',
+        'macd_12_26_9_line', 'macd_12_26_9_signal', 'macd_12_26_9_histogram',
+        'rv_10', 'rv_20', 'rv_30', 'rv_60',
+        'hls_10', 'hls_20'
+    ]
+    
+    # Handle any NaN values
+    result = processed_data[final_features].fillna(0)
+    return result
+
 def remove_outliers(df):
     Q1 = df.quantile(0.25)
     Q3 = df.quantile(0.75)

@@ -236,6 +236,31 @@ def analyze_features(features_df, labels_df):
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
+            ## Raw technical indicators
+            # query = (
+            #     select(MarketData, EquityIndicators, SupClassifierDataset)
+            #     .join(
+            #         EquityIndicators,
+            #         (MarketData.ticker == EquityIndicators.ticker) &
+            #         (MarketData.report_date == EquityIndicators.report_date)
+            #     ).join(
+            #         SupClassifierDataset,
+            #         (MarketData.ticker == SupClassifierDataset.ticker) &
+            #         (MarketData.report_date == SupClassifierDataset.end_date)
+            #     )
+            #     .where(MarketData.ticker == ticker)
+            # )
+               
+            # query = (query
+            #         .order_by(MarketData.report_date)
+            #         .offset(offset)
+            #         .limit(count))
+                    
+            # query_result = session.execute(query).all()
+            # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
+            # labels_df = process_labels([(record[2]) for record in query_result])
+            
+            
             ### Processed technical indicators
             # query = (
             #     select(MarketData, EquityIndicators, SupClassifierDataset)
@@ -260,10 +285,39 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
             # labels_df = process_labels([(record[2]) for record in query_result])
             
+            
             ### Raw market data
+            # query = (
+            #     select(MarketData, SupClassifierDataset)
+            #     .join(
+            #         SupClassifierDataset,
+            #         (MarketData.ticker == SupClassifierDataset.ticker) &
+            #         (MarketData.report_date == SupClassifierDataset.end_date)
+            #     )
+            #     .where(MarketData.ticker == ticker)
+            # )
+            
+            # query = (query
+            #         .order_by(MarketData.report_date)
+            #         .offset(offset)
+            #         .limit(count))
+                    
+            # query_result = session.execute(query).all()
+            # market_data = [record[0] for record in query_result]
+            # labels = [record[1] for record in query_result]
+
+            # feature_df = process_raw_market_data(market_data, lookback_days=20)
+            # labels_df = process_labels(labels)
+            
+            
+            ### Combined raw market data and technical indicators
             query = (
-                select(MarketData, SupClassifierDataset)
+                select(MarketData, EquityIndicators, SupClassifierDataset)
                 .join(
+                    EquityIndicators,
+                    (MarketData.ticker == EquityIndicators.ticker) &
+                    (MarketData.report_date == EquityIndicators.report_date)
+                ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
                     (MarketData.report_date == SupClassifierDataset.end_date)
@@ -277,11 +331,18 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
                     .limit(count))
                     
             query_result = session.execute(query).all()
-            market_data = [record[0] for record in query_result]
-            labels = [record[1] for record in query_result]
 
-            feature_df = process_raw_market_data(market_data, lookback_days=20)
-            labels_df = process_labels(labels)
+            # Process both types of features
+            market_data = [record[0] for record in query_result]
+            raw_feature_df = process_raw_market_data(market_data, lookback_days=20)
+            tech_feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
+            labels_df = process_labels([(record[2]) for record in query_result])
+
+            # Combine features
+            feature_df = pd.concat([raw_feature_df, tech_feature_df], axis=1)
+            # Remove any duplicate columns if they exist
+            feature_df = feature_df.loc[:,~feature_df.columns.duplicated()]
+            
             
             return feature_df, labels_df
         
