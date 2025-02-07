@@ -7,3 +7,6 @@ Run the code with "python main.py"
 Run the code with "python scripts/analyze_accuracy.py --ticker 'ticker' --model 'model' --features 'feature_set'" 
 4. Before training: switch feature set in get_data method of staggered_training in mlp_model.py
 Rename the ticker, model_name, and feature_set in main.py
+5. Without specifying the days of data, the default number of day is one-day 
+("Raw technical indicators" means the indicators on the report day only; 
+"Raw technical indicators (20 days)" means there's a lookback window of 20 days)

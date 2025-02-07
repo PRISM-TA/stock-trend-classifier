@@ -1,5 +1,16 @@
+import numpy as np
 import pandas as pd
-
+from datetime import datetime, timedelta
+from sqlalchemy import select, func
+from sklearn.preprocessing import StandardScaler, QuantileTransformer
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.utils.class_weight import compute_class_weight
+from data_models.MarketData import MarketData
+from data_models.EquityIndicators import EquityIndicators
+from data_models.SupervisedClassifierDataset import SupClassifierDataset
+import scipy.stats as stats
+import traceback
+from collections import defaultdict
 
 def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
     """Process raw technical indicators into a DataFrame"""
@@ -42,6 +53,55 @@ def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
     result = data[final_features].fillna(0)
     return result
 
+def process_20_day_raw_equity_indicators(raw_data, lookback_days=20) -> pd.DataFrame:
+    """Process raw technical indicators into a DataFrame"""
+    # Convert raw_data to DataFrame first
+    data = pd.DataFrame([{
+        'report_date': record[0].report_date,
+        'rsi_9': record[1].rsi_9,
+        'rsi_14': record[1].rsi_14,
+        'rsi_20': record[1].rsi_20,
+        'sma_20': record[1].sma_20,
+        'sma_50': record[1].sma_50,
+        'sma_200': record[1].sma_200,
+        'ema_20': record[1].ema_20,
+        'ema_50': record[1].ema_50,
+        'ema_200': record[1].ema_200,
+        'macd_12_26_9_line': record[1].macd_12_26_9_line,
+        'macd_12_26_9_signal': record[1].macd_12_26_9_signal,
+        'macd_12_26_9_histogram': record[1].macd_12_26_9_histogram,
+        'rv_10': record[1].rv_10,
+        'rv_20': record[1].rv_20,
+        'rv_30': record[1].rv_30,
+        'rv_60': record[1].rv_60,
+        'hls_10': record[1].hls_10,
+        'hls_20': record[1].hls_20
+    } for record in raw_data])
+    
+    data.set_index('report_date', inplace=True)
+    
+    # Create list of DataFrames to concatenate
+    dfs_to_concat = []
+    cols = ['rsi_9', 'rsi_14', 'rsi_20',
+        'sma_20', 'sma_50', 'sma_200',
+        'ema_20', 'ema_50', 'ema_200',
+        'macd_12_26_9_line', 'macd_12_26_9_signal', 'macd_12_26_9_histogram',
+        'rv_10', 'rv_20', 'rv_30', 'rv_60',
+        'hls_10', 'hls_20']
+    
+    for i in range(lookback_days):
+        day_suffix = f"_t-{i}" if i > 0 else "_t"
+        temp_df = data[cols].shift(i).rename(
+            columns={col: f'{col}{day_suffix}' for col in cols}
+        )
+        dfs_to_concat.append(temp_df)
+    
+    # Concatenate all features at once
+    result_df = pd.concat(dfs_to_concat, axis=1)
+    
+    return result_df.dropna()
+
+
 def remove_outliers(df):
     Q1 = df.quantile(0.25)
     Q3 = df.quantile(0.75)
@@ -51,7 +111,7 @@ def remove_outliers(df):
     return df[~((df < lower_bound) | (df > upper_bound))]
 
 def process_equity_indicators(raw_data) -> pd.DataFrame:
-    """Process technical indicators using existing preprocessing"""
+    """Process technical indicators with preprocessing steps"""
     # Convert raw_data to DataFrame first
     data = pd.DataFrame([{
         'report_date': record[0].report_date,
@@ -188,6 +248,7 @@ def process_raw_market_data(market_data_records, lookback_days=20) -> pd.DataFra
     
     return result_df.dropna()
     
+
 def process_labels(raw_labels) -> pd.DataFrame:
     """Process raw labels into labels DataFrame"""
     labels_data = []
