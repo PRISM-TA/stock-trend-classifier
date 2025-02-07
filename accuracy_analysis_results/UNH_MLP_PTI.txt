@@ -2,7 +2,7 @@
 ==================================================
 Results Analysis for UNH
 Model: MLP
-Feature Set: Processed technical indicators + manual labels
+Feature Set: Processed technical indicators
 ==================================================
 
 Total Predictions: 4740
