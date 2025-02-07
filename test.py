@@ -33,7 +33,7 @@ def main():
     param = StaggeredTrainingParam(
         training_day_count=240,
         prediction_day_count=60,
-        ticker='AAPL'
+        ticker='UNH'
     )
     
     model_name = "MLP"

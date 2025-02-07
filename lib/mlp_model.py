@@ -15,7 +15,7 @@ from data_models.MarketData import MarketData
 from data_models.EquityIndicators import EquityIndicators
 from data_models.SupervisedClassifierDataset import SupClassifierDataset
 from data_models.StaggeredTrainingParam import StaggeredTrainingParam
-from lib.data_preprocessing import process_labels, process_equity_indicators, process_raw_market_data
+from lib.data_preprocessing import process_labels, process_raw_equity_indicators, process_equity_indicators, process_raw_market_data
 import traceback
 from collections import defaultdict
 
@@ -335,13 +335,33 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             # Process both types of features
             market_data = [record[0] for record in query_result]
             raw_feature_df = process_raw_market_data(market_data, lookback_days=20)
-            tech_feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
+            tech_feature_df = process_raw_equity_indicators([(record[0], record[1]) for record in query_result])
             labels_df = process_labels([(record[2]) for record in query_result])
+
+            # Get the length of the shortest dataframe
+            min_length = min(len(raw_feature_df), len(tech_feature_df), len(labels_df))
+
+            # Trim all dataframes to the same length from the end
+            raw_feature_df = raw_feature_df.iloc[-min_length:]
+            tech_feature_df = tech_feature_df.iloc[-min_length:]
+            labels_df = labels_df.iloc[-min_length:]
+
+            # Reset indexes before concatenating
+            raw_feature_df.index = range(len(raw_feature_df))
+            tech_feature_df.index = range(len(tech_feature_df))
+            labels_df.index = range(len(labels_df))
+
+            print("Raw feature shape:", raw_feature_df.shape)
+            print("Tech feature shape:", tech_feature_df.shape)
+            print("Labels shape:", labels_df.shape)
+            print("Actual tech columns:", tech_feature_df.columns.tolist())
 
             # Combine features
             feature_df = pd.concat([raw_feature_df, tech_feature_df], axis=1)
             # Remove any duplicate columns if they exist
             feature_df = feature_df.loc[:,~feature_df.columns.duplicated()]
+
+            print("Final feature shape:", feature_df.shape)
             
             
             return feature_df, labels_df

@@ -39,10 +39,7 @@ def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
     
     data.set_index('report_date', inplace=True)
     
-    # Initialize processed data DataFrame
-    processed_data = pd.DataFrame(index=data.index)
-    
-    # Preprocessed features
+    # List of features we want to keep
     final_features = [
         'rsi_9', 'rsi_14', 'rsi_20',
         'sma_20', 'sma_50', 'sma_200',
@@ -52,8 +49,8 @@ def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
         'hls_10', 'hls_20'
     ]
     
-    # Handle any NaN values
-    result = processed_data[final_features].fillna(0)
+    # Select only the columns we want and handle any NaN values
+    result = data[final_features].fillna(0)
     return result
 
 def remove_outliers(df):
