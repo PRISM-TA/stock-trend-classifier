@@ -1,8 +1,8 @@
-from data_models.ClassifierResult import ClassifierResult
+from models.ClassifierResult import ClassifierResult
 from sqlalchemy import select
-from data_models.MarketData import MarketData
-from data_models.EquityIndicators import EquityIndicators
-from data_models.SupervisedClassifierDataset import SupClassifierDataset
+from models.MarketData import MarketData
+from models.EquityIndicators import EquityIndicators
+from models.SupervisedClassifierDataset import SupClassifierDataset
 import pandas as pd
 
     

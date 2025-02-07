@@ -1,6 +1,6 @@
 from lib.mlp_model import staggered_training
 from lib.classifier_result_handler import upload_classifier_result_batch
-from data_models.StaggeredTrainingParam import StaggeredTrainingParam
+from models.StaggeredTrainingParam import StaggeredTrainingParam
 from db.session import create_db_session
 from dotenv import load_dotenv
 import os

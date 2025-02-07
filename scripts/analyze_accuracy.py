@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 from sqlalchemy import select, create_engine
-from data_models.ClassifierResult import ClassifierResult
+from models.ClassifierResult import ClassifierResult
 from sklearn.metrics import recall_score, precision_score, f1_score, confusion_matrix
 import warnings
 from typing import Dict
