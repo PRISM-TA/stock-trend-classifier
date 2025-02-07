@@ -1,17 +1,15 @@
+### This is to visualize the stock price graph with the real and predicted labels
+
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime, timedelta
-import numpy as np
 from typing import Tuple, List, Dict
 import os
-from matplotlib.dates import DateFormatter
 import warnings
 from sklearn.metrics import recall_score, precision_score, f1_score, confusion_matrix
 from sklearn.exceptions import UndefinedMetricWarning
 from sqlalchemy import select
-from data.SupervisedClassifierDataset import SupClassifierDataset  # Update import path as needed
-from data.MarketData import MarketData  # Update import path as needed
+from models.SupervisedClassifierDataset import SupClassifierDataset
+from models.MarketData import MarketData 
 
 # Suppress the specific warning
 warnings.filterwarnings('ignore', category=UndefinedMetricWarning)
