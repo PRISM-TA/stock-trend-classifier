@@ -238,9 +238,9 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             query_result = session.execute(query).all()
             
             # Raw technical indicators
-            feature_df = process_raw_equity_indicators([(record[0], record[1]) for record in query_result])
+            # feature_df = process_raw_equity_indicators([(record[0], record[1]) for record in query_result])
             # Raw 20-day technical indicators
-            # feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)
+            feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)
             # Processed technical indicators
             # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
             
