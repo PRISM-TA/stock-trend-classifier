@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for UNH
+Model: MLP
+Feature Set: Raw market data (20 days) + raw technical indicators (20 days)
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.3347
+
+Actual Label Distribution:
+Label 0: 599 (18.49%)
+Label 1: 1609 (49.68%)
+Label 2: 1031 (31.83%)
+
+Predicted Label Distribution:
+Label 0: 518 (15.99%)
+Label 1: 1666 (51.44%)
+Label 2: 1055 (32.57%)
+
+Metrics:
+Macro Recall: 0.2790
+Macro Precision: 0.2783
+Macro F1: 0.2784
+
+Downtrend:
+  Recall: 0.1252
+  Precision: 0.1448
+  F1: 0.1343
+
+Sideways:
+  Recall: 0.4761
+  Precision: 0.4598
+  F1: 0.4678
+
+Uptrend:
+  Recall: 0.2357
+  Precision: 0.2303
+  F1: 0.2330
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend              75            289           235
+True_Sideways              266            766           577
+True_Uptrend               177            611           243

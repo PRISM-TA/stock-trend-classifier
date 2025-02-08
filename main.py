@@ -24,7 +24,7 @@ def main():
     
     model_name = "MLP"
     # feature_set = "Processed technical indicators"
-    feature_set = "Raw technical indicators (20 days)"
+    feature_set = "Raw market data (20 days) + raw technical indicators (20 days)"
 
     print("\nStarting training and prediction process...")
     # Get all classifier results
