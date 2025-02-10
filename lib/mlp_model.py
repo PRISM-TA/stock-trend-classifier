@@ -4,7 +4,7 @@ from models.EquityIndicators import EquityIndicators
 from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 
-from classifiers.mlp_classifier import MLPClassifier
+from classifiers.classifier import BaseClassifier, MLPClassifier
 from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
 
 import torch
@@ -294,6 +294,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
         # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
         model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
+        # model.train_classifier(train_loader=train_loader, val_loader=train_loader, criterion=criterion, optimizer=optimizer, num_epochs=max_epochs)
 
         model.eval()
         predictions = []
