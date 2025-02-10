@@ -329,7 +329,6 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             
             return feature_df, labels_df
         
-
     def scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df):
         scaler = StandardScaler()
         train_features = scaler.fit_transform(feat_train_df.values)
