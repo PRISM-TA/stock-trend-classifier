@@ -1,39 +1,23 @@
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import numpy as np
-import pandas as pd
-from sqlalchemy import select, func
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
 from models.MarketDataset import MarketDataset
 from models.MarketData import MarketData
 from models.EquityIndicators import EquityIndicators
 from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
-from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_equity_indicators, process_raw_market_data
 
-    
-class MLPClassifier(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int = 128, dropout_rate: float = 0.2):
-        super(MLPClassifier, self).__init__()
-        
-        self.model = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_size, 3)  # Keep 3 classes since we know we have labels 0, 1, 2
-        )
-    
-    def forward(self, x):
-        return self.model(x)
-    
+from classifiers.mlp_classifier import MLPClassifier
+from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+
+import numpy as np
+import pandas as pd
+from sqlalchemy import select, func
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+
+
 def calculate_class_weights(labels):
     """Calculate balanced class weights dynamically for all present classes"""
     # Convert float labels to integers
