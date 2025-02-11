@@ -96,32 +96,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
             
     return model
 
-def evaluate_model(model, test_loader, device):
-    model.eval()
-    all_preds = []
-    all_labels = []
-    
-    with torch.no_grad():
-        for features, labels in test_loader:
-            features, labels = features.to(device), labels.to(device)
-            outputs = model(features)
-            _, predicted = torch.max(outputs.data, 1)
-            all_preds.extend(predicted.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
-    
-    # Convert to numpy arrays
-    all_preds = np.array(all_preds)
-    all_labels = np.array(all_labels)
-    
-    # Get unique classes
-    classes = np.unique(np.concatenate([all_labels, all_preds]))
-    
-    # Calculate metrics
-    report = classification_report(all_labels, all_preds, output_dict=True)
-    conf_matrix = confusion_matrix(all_labels, all_preds)
-    
-    return report, conf_matrix
-
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
