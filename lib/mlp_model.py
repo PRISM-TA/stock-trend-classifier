@@ -3,9 +3,10 @@ from models.MarketData import MarketData
 from models.EquityIndicators import EquityIndicators
 from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
+from models.BaseHyperParam import BaseHyperParam
 
 from classifiers.BaseClassifier import BaseClassifier
-from classifiers.MLPClassifier import MLPClassifier
+from classifiers.MLPClassifier import MLPClassifier_V0
 from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
 
 import torch
@@ -260,21 +261,25 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
         train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = MLPClassifier(input_size=train_features.shape[1]).to(device)
+        model = MLPClassifier_V0(input_size=train_features.shape[1]).to(device)
         class_weights = calculate_class_weights(train_labels)
         criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
         # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
-        model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
-        # model.train_classifier(
-        #     train_loader=train_loader,  
-        #     criterion=criterion, 
-        #     optimizer=optimizer, 
-        #     num_epochs=max_epochs,
-        #     early_stopping=True,
-        #     val_loader=train_loader,
-        #     patience=50
-        # )
+        training_param = BaseHyperParam(
+            criterion=criterion,
+            optimizer=optimizer,
+            num_epochs=max_epochs,
+            early_stopping=True,
+            val_loader=train_loader,
+            patience=50
+        )
+        # model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
+        model.train_classifier(
+            train_loader=train_loader,  
+            param=training_param,
+            val_loader=train_loader
+        )
 
         model.eval()
         predictions = []
