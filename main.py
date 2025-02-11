@@ -1,9 +1,9 @@
-from lib.mlp_model import staggered_training
+from lib.staggered_training import staggered_training
 from lib.classifier_result_handler import upload_classifier_result_batch
 
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
-from classifiers.ClassifierFactory import ClassifierFactory
+from classifiers.factory.ClassifierFactory import ClassifierFactory
 from classifiers.MLPClassifier import MLPClassifier_V0
 from lib.data_preprocessing import calculate_class_weights
 
