@@ -6,7 +6,7 @@ from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
 
 from classifiers.factory.ClassifierFactory import ClassifierFactory
-from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data, calculate_class_weights
+from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data, calculate_class_weights, process_equity_indicators
 
 import torch
 import torch.nn as nn
