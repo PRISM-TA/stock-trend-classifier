@@ -4,7 +4,8 @@ from models.EquityIndicators import EquityIndicators
 from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 
-from classifiers.classifier import BaseClassifier, MLPClassifier
+from classifiers.BaseClassifier import BaseClassifier
+from classifiers.MLPClassifier import MLPClassifier
 from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
 
 import torch
