@@ -15,7 +15,7 @@ class BaseClassifier(nn.Module):
     def forward():
         pass
 
-    def train_classifier(self, train_loader, val_loader, criterion, optimizer, num_epochs=100, patience=50):
+    def train_classifier(self, train_loader, val_loader, criterion, optimizer, num_epochs=100, early_stopping=True, patience=50)->None:
         best_loss = float('inf')
         patience_counter = 0
         
@@ -65,9 +65,6 @@ class BaseClassifier(nn.Module):
             if patience_counter >= patience:
                 print(f"Early stopping at epoch {epoch}")
                 break
-
-    def make_prediction(self, test_loader):
-        pass
 
 class MLPClassifier(BaseClassifier):
     def __init__(self, input_size: int, output_size: int = 3, hidden_size: int = 128, dropout_rate: float = 0.2):
