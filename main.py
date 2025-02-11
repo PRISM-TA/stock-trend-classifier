@@ -28,7 +28,7 @@ def main():
     param = StaggeredTrainingParam(
         training_day_count=240,
         prediction_day_count=60,
-        ticker='MSFT'
+        ticker='HD'
     )
     model_param = BaseHyperParam(
         num_epochs=1000,

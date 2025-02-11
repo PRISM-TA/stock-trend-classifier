@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for HD
+Model: MLP
+Feature Set: Raw market data (20 days) + raw technical indicators
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.3838
+
+Actual Label Distribution:
+Label 0: 674 (20.81%)
+Label 1: 1597 (49.31%)
+Label 2: 968 (29.89%)
+
+Predicted Label Distribution:
+Label 0: 584 (18.03%)
+Label 1: 1703 (52.58%)
+Label 2: 952 (29.39%)
+
+Metrics:
+Macro Recall: 0.3406
+Macro Precision: 0.3437
+Macro F1: 0.3415
+
+Downtrend:
+  Recall: 0.2389
+  Precision: 0.2757
+  F1: 0.2560
+
+Sideways:
+  Recall: 0.5153
+  Precision: 0.4833
+  F1: 0.4988
+
+Uptrend:
+  Recall: 0.2676
+  Precision: 0.2721
+  F1: 0.2698
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             161            321           192
+True_Sideways              273            823           501
+True_Uptrend               150            559           259
