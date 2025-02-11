@@ -17,13 +17,11 @@ class BaseHyperParam:
                  optimizer: torch.optim.Optimizer, 
                  num_epochs: int = 100, 
                  early_stopping: bool = True, 
-                 val_loader: torch.utils.data.DataLoader = None, 
                  patience: int = 50):
         self.criterion = criterion
         self.optimizer = optimizer
         self.num_epochs = num_epochs
         self.early_stopping = early_stopping
-        self.val_loader = val_loader
         self.patience = patience
     
     def __repr__(self):

@@ -13,11 +13,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
 
 
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
@@ -193,10 +191,8 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             optimizer=optimizer,
             num_epochs=max_epochs,
             early_stopping=True,
-            val_loader=train_loader,
             patience=50
         )
-        # model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
         model.train_classifier(
             train_loader=train_loader,  
             param=training_param,
