@@ -1,16 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from sqlalchemy import select, func
-from sklearn.preprocessing import StandardScaler, QuantileTransformer
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.utils.class_weight import compute_class_weight
-from models.MarketData import MarketData
-from models.EquityIndicators import EquityIndicators
-from models.SupervisedClassifierDataset import SupClassifierDataset
-import scipy.stats as stats
-import traceback
-from collections import defaultdict
+import torch
 
 def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
     """Process raw technical indicators into a DataFrame"""
@@ -260,3 +250,102 @@ def process_labels(raw_labels) -> pd.DataFrame:
     
     df = pd.DataFrame(labels_data, index=dates)
     return df
+
+def calculate_class_weights(labels):
+    """Calculate balanced class weights dynamically for all present classes"""
+    # Convert float labels to integers
+    labels_int = labels.astype(int)
+    # Get unique classes and their counts
+    unique_classes = np.unique(labels_int)
+    class_counts = np.bincount(labels_int)
+
+    # Calculate weights for each present class
+    class_weights = torch.FloatTensor(len(class_counts))
+    for i in range(len(class_counts)):
+        if class_counts[i] > 0:
+            class_weights[i] = 1.0 / class_counts[i]
+        else:
+            class_weights[i] = 0.0
+
+    # Normalize weights
+    if class_weights.sum() > 0:
+        class_weights = class_weights / class_weights.sum()
+    else:
+        # If all weights are zero, use equal weights
+        class_weights = torch.ones(len(class_counts)) / len(class_counts)
+
+    return class_weights
+
+def analyze_features(features_df, labels_df):
+    """Comprehensive analysis of features and their relationships to trend states"""
+    print("\nAnalyzing feature relationships...")
+    
+    analysis_results = {}
+    feature_importance = {}
+    
+    # Group features by type
+    feature_groups = {
+        'RSI': ['rsi_9_centered', 'rsi_14_centered', 'rsi_20_centered'],
+        'SMA': ['sma_20_normalized', 'sma_50_normalized', 'sma_200_normalized'],
+        'EMA': ['ema_20_normalized', 'ema_50_normalized', 'ema_200_normalized'],
+        'MACD': ['macd_line_normalized', 'macd_signal_normalized', 'macd_histogram_normalized']
+    }
+    
+    # Analyze each trend state
+    for trend_state in [0, 1, 2]:
+        state_mask = labels_df['label'] == trend_state
+        state_name = {0: "Downtrend", 1: "Sideways", 2: "Uptrend"}[trend_state]
+        print(f"\nAnalyzing {state_name} (Label {trend_state}):")
+        
+        state_features = features_df[state_mask]
+        other_features = features_df[~state_mask]
+        
+        # Analyze by feature group
+        for group_name, features in feature_groups.items():
+            print(f"\n{group_name} Indicators:")
+            group_results = {}
+            
+            for feature in features:
+                state_values = state_features[feature]
+                other_values = other_features[feature]
+                
+                # Basic statistics
+                state_mean = state_values.mean()
+                state_std = state_values.std()
+                other_mean = other_values.mean()
+                other_std = other_values.std()
+                
+                # Calculate separation power
+                separation = abs(state_mean - other_mean) / (state_std + other_std) if (state_std + other_std) != 0 else 0
+                
+                # Calculate correlation with labels
+                correlation = np.corrcoef(features_df[feature], labels_df['label'])[0,1]
+                
+                # Store results
+                group_results[feature] = {
+                    'mean': state_mean,
+                    'std': state_std,
+                    'separation': separation,
+                    'correlation': correlation
+                }
+                
+                # Update feature importance
+                if feature not in feature_importance:
+                    feature_importance[feature] = separation
+                else:
+                    feature_importance[feature] = max(feature_importance[feature], separation)
+                
+                print(f"  {feature}:")
+                print(f"    Mean: {state_mean:.4f}")
+                print(f"    Std: {state_std:.4f}")
+                print(f"    Separation: {separation:.4f}")
+                print(f"    Correlation: {correlation:.4f}")
+            
+            analysis_results[(state_name, group_name)] = group_results
+    
+    # Print overall feature importance
+    print("\nOverall Feature Importance:")
+    for feature, importance in sorted(feature_importance.items(), key=lambda x: x[1], reverse=True):
+        print(f"{feature}: {importance:.4f}")
+    
+    return analysis_results, feature_importance

@@ -1,3 +1,5 @@
+(Outdated: to be updated)
+
 To run the code:
 
 1. Install the packages in requirements.txt
@@ -5,7 +7,7 @@ To run the code:
 Run the code with "python main.py" 
 3. To get the accuracy report stored in accuracy_analysis_results folder：
 Run the code with "python scripts/analyze_accuracy.py --ticker 'ticker' --model 'model' --features 'feature_set'" 
-4. Before training: switch feature set in get_data method of staggered_training in mlp_model.py
+4. Before training: switch feature set in get_data method of staggered_training in staggered_training.py
 Rename the ticker, model_name, and feature_set in main.py
 5. Without specifying the days of data, the default number of day is one-day 
 ("Raw technical indicators" means the indicators on the report day only; 
