@@ -19,58 +19,6 @@ from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs=100, patience=50):
-    best_loss = float('inf')
-    patience_counter = 0
-    
-    for epoch in range(num_epochs):
-        model.train()
-        total_loss = 0
-        
-        for batch_features, batch_labels in train_loader:
-            batch_features = batch_features.to(device)
-            batch_labels = batch_labels.to(device).long().squeeze()
-            
-            optimizer.zero_grad()
-            outputs = model(batch_features)
-            
-            # Handle single sample case
-            if outputs.dim() == 2 and outputs.size(0) == 1:
-                outputs = outputs.squeeze(0)
-                batch_labels = batch_labels.squeeze(0)
-            
-            loss = criterion(outputs, batch_labels)
-            loss.backward()
-            optimizer.step()
-            
-            total_loss += loss.item()
-        
-        # Validation
-        model.eval()
-        val_loss = 0
-        with torch.no_grad():
-            for val_features, val_labels in val_loader:
-                val_features = val_features.to(device)
-                val_labels = val_labels.to(device).long().squeeze()
-                
-                val_outputs = model(val_features)
-                val_loss += criterion(val_outputs, val_labels).item()
-        
-        if epoch % 50 == 0:
-            print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
-        
-        # Early stopping
-        if val_loss < best_loss:
-            best_loss = val_loss
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            
-        if patience_counter >= patience:
-            print(f"Early stopping at epoch {epoch}")
-            break
-            
-    return model
 
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
