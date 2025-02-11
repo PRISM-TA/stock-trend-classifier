@@ -5,8 +5,7 @@ from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
 
-from classifiers.BaseClassifier import BaseClassifier
-from classifiers.MLPClassifier import MLPClassifier_V0
+from classifiers.ClassifierFactory import ClassifierFactory
 from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data, calculate_class_weights
 
 import torch
@@ -18,7 +17,7 @@ from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 
 
-def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
+def staggered_training(session, param: StaggeredTrainingParam, classifier_factory: ClassifierFactory, model_param: BaseHyperParam, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
             ### Technical indicators:
@@ -160,8 +159,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             query_result = session.execute(query).all()
             print(f"[DEBUG] available_data_count for {ticker}: {query_result[0][0]}")
             return query_result[0][0]
-    
-    max_epochs = 1000
+
     classifier_result_list = []
 
     available_data_count = get_available_data_count(session, param.ticker) - param.training_day_count
@@ -181,21 +179,17 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
         train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = MLPClassifier_V0(input_size=train_features.shape[1]).to(device)
-        class_weights = calculate_class_weights(train_labels)
-        criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
+        model = classifier_factory.create_classifier(input_size=train_features.shape[1]).to(device)
+
+        criterion = nn.CrossEntropyLoss(weight=calculate_class_weights(train_labels).to(device))
         # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
-        training_param = BaseHyperParam(
+
+        model.train_classifier(
             criterion=criterion,
             optimizer=optimizer,
-            num_epochs=max_epochs,
-            early_stopping=True,
-            patience=50
-        )
-        model.train_classifier(
             train_loader=train_loader,  
-            param=training_param,
+            param=model_param,
             val_loader=train_loader
         )
 
@@ -221,7 +215,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             'training_offset': training_offset,
             'prediction_offset': prediction_offset,
             'probabilities': probabilities, 
-            'model': model_name,
+            'model': model.model_name,
             'feature_set': feature_set
         }
         classifier_result_list.append(classifier_result)

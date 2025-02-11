@@ -17,7 +17,7 @@ class BaseClassifier(nn.Module):
     def forward():
         pass
 
-    def train_classifier(self, param: BaseHyperParam, train_loader, val_loader=None)->None:
+    def train_classifier(self, criterion: nn.Module, optimizer: torch.optim.Optimizer, param: BaseHyperParam, train_loader, val_loader=None)->None:
         best_loss = float('inf')
         patience_counter = 0
         
@@ -29,7 +29,7 @@ class BaseClassifier(nn.Module):
                 batch_features = batch_features.to(self.device)
                 batch_labels = batch_labels.to(self.device).long().squeeze()
                 
-                param.optimizer.zero_grad()
+                optimizer.zero_grad()
                 outputs = self(batch_features)
                 
                 # Handle single sample case
@@ -37,9 +37,9 @@ class BaseClassifier(nn.Module):
                     outputs = outputs.squeeze(0)
                     batch_labels = batch_labels.squeeze(0)
                 
-                loss = param.criterion(outputs, batch_labels)
+                loss = criterion(outputs, batch_labels)
                 loss.backward()
-                param.optimizer.step()
+                optimizer.step()
                 
                 total_loss += loss.item()
 
@@ -54,7 +54,7 @@ class BaseClassifier(nn.Module):
                         val_labels = val_labels.to(self.device).long().squeeze()
                         
                         val_outputs = self(val_features)
-                        val_loss += param.criterion(val_outputs, val_labels).item()
+                        val_loss += criterion(val_outputs, val_labels).item()
                 
                 if epoch % 50 == 0:
                     print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
