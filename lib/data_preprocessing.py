@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import torch
 
 def process_raw_equity_indicators(raw_data) -> pd.DataFrame:
     """Process raw technical indicators into a DataFrame"""
@@ -249,6 +250,31 @@ def process_labels(raw_labels) -> pd.DataFrame:
     
     df = pd.DataFrame(labels_data, index=dates)
     return df
+
+def calculate_class_weights(labels):
+    """Calculate balanced class weights dynamically for all present classes"""
+    # Convert float labels to integers
+    labels_int = labels.astype(int)
+    # Get unique classes and their counts
+    unique_classes = np.unique(labels_int)
+    class_counts = np.bincount(labels_int)
+
+    # Calculate weights for each present class
+    class_weights = torch.FloatTensor(len(class_counts))
+    for i in range(len(class_counts)):
+        if class_counts[i] > 0:
+            class_weights[i] = 1.0 / class_counts[i]
+        else:
+            class_weights[i] = 0.0
+
+    # Normalize weights
+    if class_weights.sum() > 0:
+        class_weights = class_weights / class_weights.sum()
+    else:
+        # If all weights are zero, use equal weights
+        class_weights = torch.ones(len(class_counts)) / len(class_counts)
+
+    return class_weights
 
 def analyze_features(features_df, labels_df):
     """Comprehensive analysis of features and their relationships to trend states"""

@@ -7,7 +7,7 @@ from models.BaseHyperParam import BaseHyperParam
 
 from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
-from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
+from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data, calculate_class_weights
 
 import torch
 import torch.nn as nn
@@ -18,32 +18,6 @@ import pandas as pd
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
-
-
-def calculate_class_weights(labels):
-    """Calculate balanced class weights dynamically for all present classes"""
-    # Convert float labels to integers
-    labels_int = labels.astype(int)
-    # Get unique classes and their counts
-    unique_classes = np.unique(labels_int)
-    class_counts = np.bincount(labels_int)
-
-    # Calculate weights for each present class
-    class_weights = torch.FloatTensor(len(class_counts))
-    for i in range(len(class_counts)):
-        if class_counts[i] > 0:
-            class_weights[i] = 1.0 / class_counts[i]
-        else:
-            class_weights[i] = 0.0
-
-    # Normalize weights
-    if class_weights.sum() > 0:
-        class_weights = class_weights / class_weights.sum()
-    else:
-        # If all weights are zero, use equal weights
-        class_weights = torch.ones(len(class_counts)) / len(class_counts)
-
-    return class_weights
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs=100, patience=50):
     best_loss = float('inf')
