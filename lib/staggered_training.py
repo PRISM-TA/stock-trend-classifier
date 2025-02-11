@@ -5,7 +5,7 @@ from models.SupervisedClassifierDataset import SupClassifierDataset
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
 
-from classifiers.ClassifierFactory import ClassifierFactory
+from classifiers.factory.ClassifierFactory import ClassifierFactory
 from lib.data_preprocessing import process_labels, process_20_day_raw_equity_indicators, process_raw_market_data, calculate_class_weights
 
 import torch
