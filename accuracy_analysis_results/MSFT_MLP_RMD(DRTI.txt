@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for MSFT
+Model: MLP
+Feature Set: Raw market data (20 days) + raw technical indicators
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.3995
+
+Actual Label Distribution:
+Label 0: 711 (21.95%)
+Label 1: 1641 (50.66%)
+Label 2: 887 (27.38%)
+
+Predicted Label Distribution:
+Label 0: 652 (20.13%)
+Label 1: 1660 (51.25%)
+Label 2: 927 (28.62%)
+
+Metrics:
+Macro Recall: 0.3501
+Macro Precision: 0.3511
+Macro F1: 0.3504
+
+Downtrend:
+  Recall: 0.2335
+  Precision: 0.2546
+  F1: 0.2436
+
+Sideways:
+  Recall: 0.5350
+  Precision: 0.5289
+  F1: 0.5320
+
+Uptrend:
+  Recall: 0.2818
+  Precision: 0.2697
+  F1: 0.2756
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             166            318           227
+True_Sideways              313            878           450
+True_Uptrend               173            464           250

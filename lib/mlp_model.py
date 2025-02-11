@@ -125,7 +125,7 @@ def evaluate_model(model, test_loader, device):
 def staggered_training(session, param: StaggeredTrainingParam, model_name: str, feature_set: str):
     def get_data(session, offset, count, ticker):
         with session() as session:
-            # ### Technical indicators:
+            ### Technical indicators:
             # query = (
             #     select(MarketData, EquityIndicators, SupClassifierDataset)
             #     .join(
@@ -149,8 +149,8 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             
             # # Raw technical indicators
             # # feature_df = process_raw_equity_indicators([(record[0], record[1]) for record in query_result])
-            # # Raw 20-day technical indicators
-            # feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)
+            # # Raw technical indicators (20 days)
+            # # feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)
             # # Processed technical indicators
             # # feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])
             
@@ -158,7 +158,7 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             # # print("Feature columns:", feature_df.columns.tolist())
             
             
-            ### Raw 20-day market data:
+            ### Raw market data (20 days):
             # query = (
             #     select(MarketData, SupClassifierDataset)
             #     .join(
@@ -207,28 +207,25 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
             # Process both types of features
             market_data = [record[0] for record in query_result]
             raw_market_feature_df = process_raw_market_data(market_data, lookback_days=20)
-            ### 1-day raw technical indicators + 20-day raw market data
+            
+            ### Raw market data (20 days) + raw technical indicators
             # raw_tech_feature_df = process_raw_equity_indicators([(record[0], record[1]) for record in query_result])
-            ### 20-day raw technical indicators + 20-day raw market data
+            ### Raw market data (20 days) + raw technical indicators (20 days)
             raw_tech_feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)
+            
             labels_df = process_labels([(record[2]) for record in query_result])
-
             # Get the length of the shortest dataframe
             min_length = min(len(raw_market_feature_df), len(raw_tech_feature_df), len(labels_df))
-
             # Trim all dataframes to the same length from the end
             raw_market_feature_df = raw_market_feature_df.iloc[-min_length:]
             raw_tech_feature_df = raw_tech_feature_df.iloc[-min_length:]
             labels_df = labels_df.iloc[-min_length:]
-
             # Reset indexes before concatenating
             raw_market_feature_df.index = range(len(raw_market_feature_df))
             raw_tech_feature_df.index = range(len(raw_tech_feature_df))
             labels_df.index = range(len(labels_df))
-
             #print("Raw market data columns:", raw_market_feature_df.columns.tolist())
             #print("Technical indicator columns:", raw_tech_feature_df.columns.tolist())
-
             # Combine features
             feature_df = pd.concat([raw_market_feature_df, raw_tech_feature_df], axis=1)
             # Remove any duplicate columns if they exist
