@@ -9,8 +9,6 @@ from lib.data_preprocessing import calculate_class_weights
 
 from db.session import create_db_session
 
-import torch
-from torch import nn
 from dotenv import load_dotenv
 import os
 
