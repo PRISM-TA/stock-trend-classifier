@@ -15,7 +15,18 @@ class BaseClassifier(nn.Module):
     def forward():
         pass
 
-    def train_classifier(self, train_loader, val_loader, criterion, optimizer, num_epochs=100, early_stopping=True, patience=50)->None:
+    def train_classifier(self, train_loader, criterion, optimizer, num_epochs=100, early_stopping=True, val_loader=None, patience=50)->None:
+        """
+        Train a classifier with specified configurations and optionally apply early stopping.
+
+        :param train_loader: DataLoader for the training dataset.
+        :param criterion: Loss function to be used for optimization.
+        :param optimizer: Optimizer for updating model parameters.
+        :param num_epochs: Number of epochs for which the model will be trained (default is 100).
+        :param early_stopping: Boolean flag indicating whether early stopping should be applied (default is True).
+        :param val_loader: DataLoader for the validation dataset, required if early stopping is enabled.
+        :param patience: Number of epochs with no improvement after which training will be stopped if early stopping is on (default is 50).
+        """
         best_loss = float('inf')
         patience_counter = 0
         
@@ -40,31 +51,33 @@ class BaseClassifier(nn.Module):
                 optimizer.step()
                 
                 total_loss += loss.item()
-            
-            # Validation
-            self.eval()
-            val_loss = 0
-            with torch.no_grad():
-                for val_features, val_labels in val_loader:
-                    val_features = val_features.to(self.device)
-                    val_labels = val_labels.to(self.device).long().squeeze()
-                    
-                    val_outputs = self(val_features)
-                    val_loss += criterion(val_outputs, val_labels).item()
-            
-            if epoch % 50 == 0:
-                print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
-            
-            # Early stopping
-            if val_loss < best_loss:
-                best_loss = val_loss
-                patience_counter = 0
-            else:
-                patience_counter += 1
+
+            if early_stopping:
+                if val_loader is None:
+                    raise ValueError("Validation data loader is required for early stopping")
+                self.eval()
+                val_loss = 0
+                with torch.no_grad():
+                    for val_features, val_labels in val_loader:
+                        val_features = val_features.to(self.device)
+                        val_labels = val_labels.to(self.device).long().squeeze()
+                        
+                        val_outputs = self(val_features)
+                        val_loss += criterion(val_outputs, val_labels).item()
                 
-            if patience_counter >= patience:
-                print(f"Early stopping at epoch {epoch}")
-                break
+                if epoch % 50 == 0:
+                    print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
+                
+                # Early stopping
+                if val_loss < best_loss:
+                    best_loss = val_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    
+                if patience_counter >= patience:
+                    print(f"Early stopping at epoch {epoch}")
+                    break
 
 class MLPClassifier(BaseClassifier):
     def __init__(self, input_size: int, output_size: int = 3, hidden_size: int = 128, dropout_rate: float = 0.2):

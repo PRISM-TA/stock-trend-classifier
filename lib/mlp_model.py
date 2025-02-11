@@ -265,7 +265,15 @@ def staggered_training(session, param: StaggeredTrainingParam, model_name: str, 
         # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
         model = train_model(model, train_loader, train_loader, criterion, optimizer, device, num_epochs=max_epochs)
-        # model.train_classifier(train_loader=train_loader, val_loader=train_loader, criterion=criterion, optimizer=optimizer, num_epochs=max_epochs)
+        # model.train_classifier(
+        #     train_loader=train_loader,  
+        #     criterion=criterion, 
+        #     optimizer=optimizer, 
+        #     num_epochs=max_epochs,
+        #     early_stopping=True,
+        #     val_loader=train_loader,
+        #     patience=50
+        # )
 
         model.eval()
         predictions = []
