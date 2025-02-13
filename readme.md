@@ -12,3 +12,5 @@ Rename the ticker, model_name, and feature_set in main.py
 5. Without specifying the days of data, the default number of day is one-day 
 ("Raw technical indicators" means the indicators on the report day only; 
 "Raw technical indicators (20 days)" means there's a lookback window of 20 days)
+6. The file names of accuracy_analysis_results follow this structure: ticker_model_featureSet
+To shorten the name, we only pick the capital letters of the feature set, i.e. RMD(DRTI stands for Raw Market Data (20 days) + Raw Technical Indicators
