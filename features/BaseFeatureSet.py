@@ -8,12 +8,12 @@ import pandas as pd
 
 class BaseFeatureSet:
     set_name: str
-    def get_data(session, offset: int, count: int, ticker: str):
+    def get_data(self, session, offset: int, count: int, ticker: str):
         raise NotImplementedError
 
 class PTI(BaseFeatureSet):
-    set_name: str = "pti"
-    def get_data(session, offset: int, count: int, ticker: str):
+    set_name: str = "processed technical indicators"
+    def get_data(self, session, offset: int, count: int, ticker: str):
         with session() as session:
             ### Processed technical indicators
             query = (
@@ -39,8 +39,8 @@ class PTI(BaseFeatureSet):
             return feature_df, labels_df
         
 class RTI(BaseFeatureSet):
-    set_name: str = "rti"
-    def get_data(session, offset: int, count: int, ticker: str):
+    set_name: str = "raw technical indicators"
+    def get_data(self, session, offset: int, count: int, ticker: str):
         with session() as session:
             ### Raw technical indicators
             query = (
@@ -66,8 +66,8 @@ class RTI(BaseFeatureSet):
             return feature_df, labels_df
 
 class RTI20D(BaseFeatureSet):
-    set_name: str = "rti(d"
-    def get_data(session, offset: int, count: int, ticker: str):
+    set_name: str = "raw technical indicators (20 days)"
+    def get_data(self, session, offset: int, count: int, ticker: str):
         with session() as session:
             ### Raw technical indicators (20 days)
             query = (
@@ -93,8 +93,8 @@ class RTI20D(BaseFeatureSet):
             return feature_df, labels_df
 
 class RMD20D(BaseFeatureSet):
-    set_name: str = "rmd(d"
-    def get_data(session, offset: int, count: int, ticker: str):
+    set_name: str = "Raw market data (20 days)"
+    def get_data(self, session, offset: int, count: int, ticker: str):
         with session() as session:        
             ## Raw market data (20 days):
             query = (
@@ -122,8 +122,8 @@ class RMD20D(BaseFeatureSet):
             return feature_df, labels_df
         
 class RMD20DRTI(BaseFeatureSet):
-    set_name: str = "rmd(drti"
-    def get_data(session, offset, count, ticker):
+    set_name: str = "Raw market data (20 days) + raw technical indicators"
+    def get_data(self, session, offset, count, ticker):
         with session() as session:        
             ### Combine market data and technical indicators:
             query = (
@@ -177,8 +177,8 @@ class RMD20DRTI(BaseFeatureSet):
             return feature_df, labels_df
 
 class RMD20DRTI20D(BaseFeatureSet):
-    set_name: str = "rmd(drti(d"
-    def get_data(session, offset, count, ticker):
+    set_name: str = "Raw market data (20 days) + raw technical indicators (20 days)"
+    def get_data(self, session, offset, count, ticker):
         with session() as session:        
             ### Combine market data and technical indicators:
             query = (

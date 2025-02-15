@@ -5,7 +5,8 @@ from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
 from classifiers.factory.ClassifierFactory import ClassifierFactory
 from classifiers.MLPClassifier import MLPClassifier_V0
-from lib.data_preprocessing import calculate_class_weights
+
+from features.BaseFeatureSet import RMD20DRTI20D
 
 from db.session import create_db_session
 
@@ -36,7 +37,7 @@ def main():
     classifier_factory = ClassifierFactory(MLPClassifier_V0)
 
     # feature_set = "Processed technical indicators"
-    feature_set = "Raw market data (20 days) + raw technical indicators (20 days)"
+    feature_set = RMD20DRTI20D()
 
     print("\nStarting training and prediction process...")
     # Get all classifier results
