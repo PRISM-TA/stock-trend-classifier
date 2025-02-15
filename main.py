@@ -39,7 +39,7 @@ def main():
     # feature_set = "Processed technical indicators"
     feature_set = RMD20DRTI20D()
 
-    print("\nStarting training and prediction process...")
+    print("[DEBUG] Starting training and prediction process...")
     # Get all classifier results
     classifier_result = staggered_training(
         db_session,
@@ -50,10 +50,10 @@ def main():
     )
     
     if not classifier_result:
-        print("No prediction results generated")
+        print("[ERROR] No prediction results generated")
         return
         
-    print(f"\nTraining complete. Got results for {len(classifier_result)} windows")
+    print(f"[DEBUG] Training complete. Got results for {len(classifier_result)} windows")
     
     # Upload all classifier results at once
     success = upload_classifier_result_batch(
@@ -63,11 +63,11 @@ def main():
     )
     
     if success:
-        print("\nSuccessfully uploaded all results to database")
+        print("[DEBUG] Successfully uploaded all results to database")
     else:
-        print("\nFailed to upload results to database")
+        print("[ERROR] Failed to upload results to database")
 
-    print("\nProcessing complete")
+    print("[DEBUG] Processing complete")
 
 if __name__ == "__main__":
     main()
