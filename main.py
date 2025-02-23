@@ -84,5 +84,5 @@ if __name__ == "__main__":
         for classifier_model in model_list:
             for feature_set in feature_list:
                 print(f"[DEBUG] Running trial for {ticker}, {classifier_model}, {feature_set}")
-                run_single_trial(db_session, ticker, classifier_model, feature_set)
+                run_single_trial(db_session, ticker, classifier_model, feature_set, upload_result)
     print("[DEBUG] Processing complete.")
