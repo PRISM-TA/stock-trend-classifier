@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for AAPL
+Model: MLPv0_ep1200
+Feature Set: Raw market data (20 days) + raw technical indicators (20 days)
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.4511
+
+Actual Label Distribution:
+Label 0: 1263 (38.99%)
+Label 1: 201 (6.21%)
+Label 2: 1775 (54.80%)
+
+Predicted Label Distribution:
+Label 0: 1113 (34.36%)
+Label 1: 236 (7.29%)
+Label 2: 1890 (58.35%)
+
+Metrics:
+Macro Recall: 0.3087
+Macro Precision: 0.3110
+Macro F1: 0.3092
+
+Downtrend:
+  Recall: 0.3270
+  Precision: 0.3711
+  F1: 0.3476
+
+Sideways:
+  Recall: 0.0100
+  Precision: 0.0085
+  F1: 0.0092
+
+Uptrend:
+  Recall: 0.5893
+  Precision: 0.5534
+  F1: 0.5708
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             413            127           723
+True_Sideways               78              2           121
+True_Uptrend               622            107          1046
