@@ -14,16 +14,27 @@ from db.session import create_db_session
 
 from dotenv import load_dotenv
 import os
+import itertools
+import multiprocessing as mp
 
 ############# Trial Setting ###############
-ticker_list =  [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
+ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
 model_list = [CNNClassifier_V0]
 feature_list = [RMD20DRTI20D, RMD20D, RTI20D]
-upload_result = True # Whether to upload results to database
+upload_result = True  # Whether to upload results to database
+num_processes = 3     # Adjust based on GPU memory capacity
 ###########################################
 
-def run_single_trial(db_session, ticker: str, model: BaseClassifier, feature_set: BaseFeatureSet, save_result: bool = False)->None:
+def run_single_trial(ticker: str, model: BaseClassifier, feature_set: BaseFeatureSet, save_result: bool = False) -> None:
     """Run a single trial for a given ticker, model, and feature set"""
+    # Create database session within the process
+    db_session = create_db_session(
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        database=os.getenv("DB_NAME")
+    )
+    
     param = StaggeredTrainingParam(
         training_day_count=240,
         prediction_day_count=60,
@@ -37,7 +48,7 @@ def run_single_trial(db_session, ticker: str, model: BaseClassifier, feature_set
     classifier_factory = ClassifierFactory(model)
     feature_set = feature_set()
 
-    print("[DEBUG] Starting training and prediction process...")
+    print(f"[INFO] Starting trial for {ticker} with {model} on {feature_set}")
     trial_result = staggered_training(
         session=db_session,
         param=param,
@@ -45,14 +56,15 @@ def run_single_trial(db_session, ticker: str, model: BaseClassifier, feature_set
         model_param=model_param,
         feature_set=feature_set
     )
+    
     if not trial_result:
-        print("[ERROR] No prediction results generated")
+        print(f"[ERROR] No prediction results generated for {ticker} with {model} on {feature_set}")
+        db_session.close()
         return
         
-    print(f"[DEBUG] Training complete. Got results for {len(trial_result)} windows")
+    print(f"[INFO] Completed training for {ticker} with {model} on {feature_set}. Results: {len(trial_result)} windows")
     
     if save_result:
-        # Upload all classifier results at once
         success = upload_classifier_result_batch(
             classifier_result_list=trial_result,
             ticker=param.ticker,
@@ -60,30 +72,21 @@ def run_single_trial(db_session, ticker: str, model: BaseClassifier, feature_set
         )
         
         if success:
-            print("[DEBUG] Successfully uploaded all results to database")
+            print(f"[INFO] Uploaded results for {ticker} with {model} on {feature_set}")
         else:
-            print("[ERROR] Failed to upload results to database")
-            raise Exception("Failed to upload results to database")
-    return
+            print(f"[ERROR] Failed to upload results for {ticker} with {model} on {feature_set}")
+
+    db_session.close()
 
 if __name__ == "__main__":
     load_dotenv()
-    # Create database session
-    db_session = create_db_session(
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        database=os.getenv("DB_NAME")
-    )
-    print("[DEBUG] Starting trials ...")
-    print("[INFO] Trials will run for tickers:", ticker_list)
-    print("[INFO] Trials will run for models:", model_list)
-    print("[INFO] Trials will run for features:", feature_list)
-    print("====================================================================")
-    print("[INFO] Total trials:", len(ticker_list) * len(model_list) * len(feature_list))
-    for ticker in ticker_list:
-        for classifier_model in model_list:
-            for feature_set in feature_list:
-                print(f"[DEBUG] Running trial for {ticker}, {classifier_model}, {feature_set}")
-                run_single_trial(db_session, ticker, classifier_model, feature_set, upload_result)
-    print("[DEBUG] Processing complete.")
+    mp.set_start_method('spawn')  # Resolve CUDA compatibility issues
+    
+    # Generate all parameter combinations
+    params = list(itertools.product(ticker_list, model_list, feature_list, [upload_result]))
+    
+    print(f"[INFO] Starting parallel trials with {num_processes} processes...")
+    with mp.Pool(processes=num_processes) as pool:
+        pool.starmap(run_single_trial, params)
+    
+    print("[INFO] All trials completed.")
