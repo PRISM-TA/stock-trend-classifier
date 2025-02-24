@@ -6,6 +6,7 @@ from models.BaseHyperParam import BaseHyperParam
 from classifiers.factory.ClassifierFactory import ClassifierFactory
 from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
+from classifiers.CNNClassifier import CNNClassifier_V0
 
 from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, RTI, RTI20D, RMD20D
 
@@ -15,10 +16,10 @@ from dotenv import load_dotenv
 import os
 
 ############# Trial Setting ###############
-ticker_list = ["AAPL", "UNH"]
-model_list = [MLPClassifier_V0]
-feature_list = [RMD20DRTI20D, RMD20DRTI]
-upload_result = False # Whether to upload results to database
+ticker_list =  [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
+model_list = [CNNClassifier_V0]
+feature_list = [RMD20DRTI20D, RMD20D, RTI20D]
+upload_result = True # Whether to upload results to database
 ###########################################
 
 def run_single_trial(db_session, ticker: str, model: BaseClassifier, feature_set: BaseFeatureSet, save_result: bool = False)->None:
