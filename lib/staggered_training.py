@@ -94,7 +94,7 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
                 predictions.append(prediction)
                 actual_labels.append(labels.item())
                 probabilities.append(probs)
-                print(f"Prediction: {prediction}, Actual Label: {labels.item()}, Probabilities: [{float(probs[0]):.4f}, {float(probs[1]):.4f}, {float(probs[2]):.4f}]")
+                # print(f"Prediction: {prediction}, Actual Label: {labels.item()}, Probabilities: [{float(probs[0]):.4f}, {float(probs[1]):.4f}, {float(probs[2]):.4f}]")
 
         classifier_result = {
             'predictions': predictions,
