@@ -56,8 +56,8 @@ class BaseClassifier(nn.Module):
                         val_outputs = self(val_features)
                         val_loss += criterion(val_outputs, val_labels).item()
                 
-                if epoch % 50 == 0:
-                    print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
+                # if epoch % 50 == 0:
+                #     print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
                 
                 # Early stopping
                 if val_loss < best_loss:
