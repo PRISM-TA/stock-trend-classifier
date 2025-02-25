@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for BA
+Model: CNNv0
+Feature Set: raw technical indicators (20 days)
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.6703
+
+Actual Label Distribution:
+Label 0: 1355 (41.83%)
+Label 1: 157 (4.85%)
+Label 2: 1727 (53.32%)
+
+Predicted Label Distribution:
+Label 0: 1180 (36.43%)
+Label 1: 132 (4.08%)
+Label 2: 1927 (59.49%)
+
+Metrics:
+Macro Recall: 0.4816
+Macro Precision: 0.4884
+Macro F1: 0.4831
+
+Downtrend:
+  Recall: 0.6022
+  Precision: 0.6915
+  F1: 0.6438
+
+Sideways:
+  Recall: 0.0637
+  Precision: 0.0758
+  F1: 0.0692
+
+Uptrend:
+  Recall: 0.7788
+  Precision: 0.6980
+  F1: 0.7362
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             816             44           495
+True_Sideways               60             10            87
+True_Uptrend               304             78          1345
