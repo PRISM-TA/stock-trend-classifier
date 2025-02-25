@@ -1,0 +1,68 @@
+
+==================================================
+Average Accuracy Analysis
+Model: CNNv0
+Feature Set: raw technical indicators (20 days)
+==================================================
+
+Number of stocks analyzed: 10
+Stocks: AAPL, AXP, BA, CAT, CSCO, CVX, INTC, MSFT, UNH, VZ
+
+Total Predictions Across All Stocks: 32390
+Overall Average Accuracy: 0.6732
+
+Actual Label Distribution:
+Label 0: 13947 (43.06%)
+Label 1: 1843 (5.69%)
+Label 2: 16600 (51.25%)
+
+Predicted Label Distribution:
+Label 0: 12541 (38.72%)
+Label 1: 2036 (6.29%)
+Label 2: 17813 (55.00%)
+
+Overall Metrics:
+Macro Recall: 0.5035
+Macro Precision: 0.5081
+Macro F1: 0.5048
+
+Downtrend:
+  Recall: 0.6629
+  Precision: 0.7372
+  F1: 0.6981
+
+Sideways:
+  Recall: 0.1026
+  Precision: 0.0928
+  F1: 0.0974
+
+Uptrend:
+  Recall: 0.7452
+  Precision: 0.6944
+  F1: 0.7189
+
+Overall Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend            9245            493          4209
+True_Sideways              420            189          1234
+True_Uptrend              2876           1354         12370
+
+Per-Stock Metrics:
+ticker  predictions  accuracy  recall  precision     f1
+  CSCO         3239    0.7045  0.5374     0.5454 0.5402
+   CAT         3239    0.6900  0.5210     0.5269 0.5224
+    VZ         3239    0.6885  0.5214     0.5210 0.5208
+   CVX         3239    0.6808  0.4867     0.4883 0.4873
+  MSFT         3239    0.6805  0.5045     0.5096 0.5058
+  AAPL         3239    0.6780  0.4908     0.5075 0.4936
+  INTC         3239    0.6703  0.5147     0.5180 0.5128
+    BA         3239    0.6635  0.4728     0.4790 0.4739
+   UNH         3239    0.6440  0.4986     0.5164 0.5008
+   AXP         3239    0.6317  0.4686     0.4747 0.4706
+
+Accuracy Statistics:
+Mean Accuracy: 0.6732
+Median Accuracy: 0.6792
+Min Accuracy: 0.6317 (AXP)
+Max Accuracy: 0.7045 (CSCO)
+Standard Deviation: 0.0219
