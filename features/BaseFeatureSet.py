@@ -2,7 +2,7 @@ from models.EquityIndicators import EquityIndicators
 from models.MarketData import MarketData
 from models.SupervisedClassifierDataset import SupClassifierDataset
 
-from lib.data_preprocessing import process_equity_indicators, process_raw_equity_indicators, process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
+from lib.data_preprocessing import process_equity_indicators, process_20_day_equity_indicators, process_raw_equity_indicators, process_labels, process_20_day_raw_equity_indicators, process_raw_market_data
 from sqlalchemy import select
 import pandas as pd
 
@@ -34,6 +34,33 @@ class PTI(BaseFeatureSet):
 
             # Processed technical indicators
             feature_df = process_equity_indicators([(record[0], record[1]) for record in query_result])          
+            labels_df = process_labels([(record[2]) for record in query_result])
+            
+            return feature_df, labels_df
+        
+class PTI20D(BaseFeatureSet):
+    set_name: str = "processed technical indicators (20 days)"
+    def get_data(self, session, offset: int, count: int, ticker: str):
+        with session as session:
+            ### Processed technical indicators (20 days)
+            query = (
+                select(MarketData, EquityIndicators, SupClassifierDataset)
+                .join(
+                    EquityIndicators,
+                    (MarketData.ticker == EquityIndicators.ticker) &
+                    (MarketData.report_date == EquityIndicators.report_date)
+                ).join(
+                    SupClassifierDataset,
+                    (MarketData.ticker == SupClassifierDataset.ticker) &
+                    (MarketData.report_date == SupClassifierDataset.end_date)
+                )
+                .where(MarketData.ticker == ticker)
+            ).order_by(MarketData.report_date).offset(offset).limit(count)
+
+            query_result = session.execute(query).all()
+
+            # Processed technical indicators (20 days)
+            feature_df = process_20_day_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)      
             labels_df = process_labels([(record[2]) for record in query_result])
             
             return feature_df, labels_df

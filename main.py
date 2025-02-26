@@ -8,7 +8,7 @@ from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
 from classifiers.CNNClassifier import CNNClassifier_V0
 
-from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, RTI, RTI20D, RMD20D
+from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, PTI20D, RTI, RTI20D, RMD20D
 
 from db.session import create_db_session
 
@@ -18,11 +18,11 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
-model_list = [CNNClassifier_V0]
-feature_list = [RMD20DRTI20D, RMD20D, RTI20D]
+ticker_list = [ "UTX", "VZ", "WMT", "XOM"]
+model_list = [MLPClassifier_V0]
+feature_list = [PTI]
 upload_result = True  # Whether to upload results to database
-num_processes = 3     # Adjust based on GPU memory capacity
+num_processes = 2     # Adjust based on GPU memory capacity
 ###########################################
 
 def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: BaseFeatureSet, save_result: bool = False) -> None:
@@ -45,7 +45,7 @@ def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: Base
             ticker=ticker
         )
         model_param = BaseHyperParam(
-            num_epochs=1000,
+            num_epochs=1200,
             early_stopping=True,
             patience=50
         )
