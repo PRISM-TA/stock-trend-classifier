@@ -5,47 +5,47 @@ Model: MLPv0_ep1200
 Feature Set: processed technical indicators
 ==================================================
 
-Number of stocks analyzed: 24
-Stocks: AAPL, AXP, BA, CAT, CSCO, CVX, DD, DIS, GE, HD, IBM, INTC, JNJ, JPM, KO, MCD, MMM, MRK, MSFT, NKE, PFE, PG, TRV, UNH
+Number of stocks analyzed: 28
+Stocks: AAPL, AXP, BA, CAT, CSCO, CVX, DD, DIS, GE, HD, IBM, INTC, JNJ, JPM, KO, MCD, MMM, MRK, MSFT, NKE, PFE, PG, TRV, UNH, UTX, VZ, WMT, XOM
 
-Total Predictions Across All Stocks: 113760
-Overall Average Accuracy: 0.8058
+Total Predictions Across All Stocks: 132720
+Overall Average Accuracy: 0.8071
 
 Actual Label Distribution:
-Label 0: 47759 (41.98%)
-Label 1: 6511 (5.72%)
-Label 2: 59490 (52.29%)
+Label 0: 55882 (42.11%)
+Label 1: 7510 (5.66%)
+Label 2: 69328 (52.24%)
 
 Predicted Label Distribution:
-Label 0: 49383 (43.41%)
-Label 1: 7722 (6.79%)
-Label 2: 56655 (49.80%)
+Label 0: 57771 (43.53%)
+Label 1: 8770 (6.61%)
+Label 2: 66179 (49.86%)
 
 Overall Metrics:
-Macro Recall: 0.6327
-Macro Precision: 0.6258
-Macro F1: 0.6286
+Macro Recall: 0.6305
+Macro Precision: 0.6243
+Macro F1: 0.6268
 
 Downtrend:
-  Recall: 0.8819
-  Precision: 0.8529
-  F1: 0.8672
+  Recall: 0.8835
+  Precision: 0.8546
+  F1: 0.8688
 
 Sideways:
-  Recall: 0.2058
-  Precision: 0.1735
-  F1: 0.1883
+  Recall: 0.1961
+  Precision: 0.1680
+  F1: 0.1810
 
 Uptrend:
-  Recall: 0.8104
-  Precision: 0.8509
-  F1: 0.8302
+  Recall: 0.8117
+  Precision: 0.8504
+  F1: 0.8306
 
 Overall Confusion Matrix:
                 Pred_Downtrend  Pred_Sideways  Pred_Uptrend
-True_Downtrend           42121           1235          4403
-True_Sideways             1128           1340          4043
-True_Uptrend              6134           5147         48209
+True_Downtrend           49372           1366          5144
+True_Sideways             1278           1473          4759
+True_Uptrend              7121           5931         56276
 
 Per-Stock Metrics:
 ticker  predictions  accuracy  recall  precision     f1
@@ -53,7 +53,10 @@ ticker  predictions  accuracy  recall  precision     f1
    IBM         4740    0.8310  0.6301     0.6404 0.6335
    DIS         4740    0.8253  0.6346     0.6378 0.6357
    CVX         4740    0.8245  0.6580     0.6430 0.6488
+   WMT         4740    0.8234  0.6174     0.6181 0.6173
+   XOM         4740    0.8192  0.6318     0.6209 0.6243
     PG         4740    0.8160  0.6446     0.6373 0.6405
+   UTX         4740    0.8152  0.6171     0.6143 0.6154
     DD         4740    0.8133  0.6353     0.6268 0.6296
    PFE         4740    0.8127  0.6591     0.6563 0.6575
     BA         4740    0.8118  0.6063     0.6027 0.6029
@@ -64,6 +67,7 @@ ticker  predictions  accuracy  recall  precision     f1
    TRV         4740    0.8040  0.6155     0.6123 0.6137
    JNJ         4740    0.8036  0.6317     0.6213 0.6251
   CSCO         4740    0.8030  0.6447     0.6347 0.6385
+    VZ         4740    0.8019  0.5988     0.5983 0.5985
     GE         4740    0.8019  0.6299     0.6217 0.6241
    UNH         4740    0.8015  0.6546     0.6407 0.6459
    CAT         4740    0.8013  0.6727     0.6577 0.6627
@@ -75,8 +79,8 @@ ticker  predictions  accuracy  recall  precision     f1
     KO         4740    0.7827  0.5907     0.5938 0.5910
 
 Accuracy Statistics:
-Mean Accuracy: 0.8058
-Median Accuracy: 0.8042
+Mean Accuracy: 0.8071
+Median Accuracy: 0.8054
 Min Accuracy: 0.7827 (KO)
 Max Accuracy: 0.8314 (MSFT)
-Standard Deviation: 0.0138
+Standard Deviation: 0.0135
