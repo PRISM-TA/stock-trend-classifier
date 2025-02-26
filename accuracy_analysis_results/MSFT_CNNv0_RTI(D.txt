@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for MSFT
+Model: CNNv0
+Feature Set: raw technical indicators (20 days)
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.6724
+
+Actual Label Distribution:
+Label 0: 1478 (45.63%)
+Label 1: 154 (4.75%)
+Label 2: 1607 (49.61%)
+
+Predicted Label Distribution:
+Label 0: 1243 (38.38%)
+Label 1: 159 (4.91%)
+Label 2: 1837 (56.72%)
+
+Metrics:
+Macro Recall: 0.4944
+Macro Precision: 0.5025
+Macro F1: 0.4956
+
+Downtrend:
+  Recall: 0.6428
+  Precision: 0.7643
+  F1: 0.6983
+
+Sideways:
+  Recall: 0.0844
+  Precision: 0.0818
+  F1: 0.0831
+
+Uptrend:
+  Recall: 0.7561
+  Precision: 0.6614
+  F1: 0.7056
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             950             13           515
+True_Sideways               34             13           107
+True_Uptrend               259            133          1215

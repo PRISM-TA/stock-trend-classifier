@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for UNH
+Model: MLPv0_ep1400
+Feature Set: processed technical indicators
+==================================================
+
+Total Predictions: 4740
+Overall Accuracy: 0.7905
+
+Actual Label Distribution:
+Label 0: 1721 (36.31%)
+Label 1: 309 (6.52%)
+Label 2: 2710 (57.17%)
+
+Predicted Label Distribution:
+Label 0: 1740 (36.71%)
+Label 1: 436 (9.20%)
+Label 2: 2564 (54.09%)
+
+Metrics:
+Macro Recall: 0.6404
+Macro Precision: 0.6275
+Macro F1: 0.6316
+
+Downtrend:
+  Recall: 0.8396
+  Precision: 0.8305
+  F1: 0.8350
+
+Sideways:
+  Recall: 0.2621
+  Precision: 0.1858
+  F1: 0.2174
+
+Uptrend:
+  Recall: 0.8196
+  Precision: 0.8662
+  F1: 0.8422
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend            1445            105           171
+True_Sideways               56             81           172
+True_Uptrend               239            250          2221

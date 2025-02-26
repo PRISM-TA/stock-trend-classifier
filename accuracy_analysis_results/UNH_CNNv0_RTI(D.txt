@@ -1,0 +1,45 @@
+
+==================================================
+Results Analysis for UNH
+Model: CNNv0
+Feature Set: raw technical indicators (20 days)
+==================================================
+
+Total Predictions: 3239
+Overall Accuracy: 0.6440
+
+Actual Label Distribution:
+Label 0: 1236 (38.16%)
+Label 1: 225 (6.95%)
+Label 2: 1778 (54.89%)
+
+Predicted Label Distribution:
+Label 0: 968 (29.89%)
+Label 1: 398 (12.29%)
+Label 2: 1873 (57.83%)
+
+Metrics:
+Macro Recall: 0.4986
+Macro Precision: 0.5164
+Macro F1: 0.5008
+
+Downtrend:
+  Recall: 0.5874
+  Precision: 0.7500
+  F1: 0.6588
+
+Sideways:
+  Recall: 0.1644
+  Precision: 0.0930
+  F1: 0.1188
+
+Uptrend:
+  Recall: 0.7441
+  Precision: 0.7064
+  F1: 0.7247
+
+Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend             726             97           413
+True_Sideways               51             37           137
+True_Uptrend               191            264          1323
