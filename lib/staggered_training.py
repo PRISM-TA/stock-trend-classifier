@@ -35,7 +35,7 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
         return train_loader, pred_loader
     
     def get_available_data_count(session, ticker, start_date=None):
-        with session() as session:
+        with session as session:
             query = (
                 select(
                     func.count(MarketData.report_date)

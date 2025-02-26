@@ -76,7 +76,7 @@ def analyze_results(db_session, ticker: str, model_name: str, feature_set: str) 
         
         sys.stdout = Logger(filename)
         
-        with db_session() as session:
+        with db_session as session:
             # Query using join pattern
             query = (
                 select(ClassifierResult.actual_label, ClassifierResult.predicted_label)

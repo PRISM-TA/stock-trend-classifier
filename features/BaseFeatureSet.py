@@ -14,7 +14,7 @@ class BaseFeatureSet:
 class PTI(BaseFeatureSet):
     set_name: str = "processed technical indicators"
     def get_data(self, session, offset: int, count: int, ticker: str):
-        with session() as session:
+        with session as session:
             ### Processed technical indicators
             query = (
                 select(MarketData, EquityIndicators, SupClassifierDataset)
@@ -41,7 +41,7 @@ class PTI(BaseFeatureSet):
 class RTI(BaseFeatureSet):
     set_name: str = "raw technical indicators"
     def get_data(self, session, offset: int, count: int, ticker: str):
-        with session() as session:
+        with session as session:
             ### Raw technical indicators
             query = (
                 select(MarketData, EquityIndicators, SupClassifierDataset)
@@ -68,7 +68,7 @@ class RTI(BaseFeatureSet):
 class RTI20D(BaseFeatureSet):
     set_name: str = "raw technical indicators (20 days)"
     def get_data(self, session, offset: int, count: int, ticker: str):
-        with session() as session:
+        with session as session:
             ### Raw technical indicators (20 days)
             query = (
                 select(MarketData, EquityIndicators, SupClassifierDataset)
@@ -95,7 +95,7 @@ class RTI20D(BaseFeatureSet):
 class RMD20D(BaseFeatureSet):
     set_name: str = "Raw market data (20 days)"
     def get_data(self, session, offset: int, count: int, ticker: str):
-        with session() as session:        
+        with session as session:        
             ## Raw market data (20 days):
             query = (
                 select(MarketData, SupClassifierDataset)
@@ -124,7 +124,7 @@ class RMD20D(BaseFeatureSet):
 class RMD20DRTI(BaseFeatureSet):
     set_name: str = "Raw market data (20 days) + raw technical indicators"
     def get_data(self, session, offset, count, ticker):
-        with session() as session:        
+        with session as session:        
             ### Combine market data and technical indicators:
             query = (
                 select(MarketData, EquityIndicators, SupClassifierDataset)
@@ -179,7 +179,7 @@ class RMD20DRTI(BaseFeatureSet):
 class RMD20DRTI20D(BaseFeatureSet):
     set_name: str = "Raw market data (20 days) + raw technical indicators (20 days)"
     def get_data(self, session, offset, count, ticker):
-        with session() as session:        
+        with session as session:        
             ### Combine market data and technical indicators:
             query = (
                 select(MarketData, EquityIndicators, SupClassifierDataset)

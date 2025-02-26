@@ -8,7 +8,7 @@ import pandas as pd
     
 def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
     try:
-        with db_session() as session:
+        with db_session as session:
             query = (
                 select(
                     MarketData.report_date,
@@ -82,7 +82,7 @@ def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
 
 def get_classifier_result(db_session, ticker=None, model=None, feature_set=None, start_date=None, end_date=None):
     try:
-        with db_session() as session:
+        with db_session as session:
             query = select(ClassifierResult)
             
             if ticker:

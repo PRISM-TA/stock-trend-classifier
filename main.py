@@ -25,58 +25,60 @@ upload_result = True  # Whether to upload results to database
 num_processes = 3     # Adjust based on GPU memory capacity
 ###########################################
 
-def run_single_trial(ticker: str, model: BaseClassifier, feature_set: BaseFeatureSet, save_result: bool = False) -> None:
-    """Run a single trial for a given ticker, model, and feature set"""
-    # Create database session within the process
-    db_session = create_db_session(
+def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: BaseFeatureSet, save_result: bool = False) -> None:
+    """
+    Run a single trial for a given ticker, model, and feature set.
+    """
+    # Create database session context manager
+    db_session_context = create_db_session(
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         host=os.getenv("DB_HOST"),
         database=os.getenv("DB_NAME")
     )
     
-    param = StaggeredTrainingParam(
-        training_day_count=240,
-        prediction_day_count=60,
-        ticker=ticker
-    )
-    model_param = BaseHyperParam(
-        num_epochs=1000,
-        early_stopping=True,
-        patience=50
-    )
-    classifier_factory = ClassifierFactory(model)
-    feature_set = feature_set()
+    # Use the context manager to handle the session
+    with db_session_context() as db_session:
+        param = StaggeredTrainingParam(
+            training_day_count=240,
+            prediction_day_count=60,
+            ticker=ticker
+        )
+        model_param = BaseHyperParam(
+            num_epochs=1000,
+            early_stopping=True,
+            patience=50
+        )
+        classifier_factory = ClassifierFactory(model)
+        feature_set = feature_set_class()  # Instantiate the feature set here
 
-    print(f"[INFO] Starting trial for {ticker} with {model} on {feature_set}")
-    trial_result = staggered_training(
-        session=db_session,
-        param=param,
-        classifier_factory=classifier_factory,
-        model_param=model_param,
-        feature_set=feature_set
-    )
-    
-    if not trial_result:
-        print(f"[ERROR] No prediction results generated for {ticker} with {model} on {feature_set}")
-        db_session.close()
-        return
-        
-    print(f"[INFO] Completed training for {ticker} with {model} on {feature_set}. Results: {len(trial_result)} windows")
-    
-    if save_result:
-        success = upload_classifier_result_batch(
-            classifier_result_list=trial_result,
-            ticker=param.ticker,
-            db_session=db_session
+        print(f"[INFO] Starting trial for {ticker} with {model.__name__} on {feature_set_class.__name__}")
+        trial_result = staggered_training(
+            session=db_session,
+            param=param,
+            classifier_factory=classifier_factory,
+            model_param=model_param,
+            feature_set=feature_set
         )
         
-        if success:
-            print(f"[INFO] Uploaded results for {ticker} with {model} on {feature_set}")
-        else:
-            print(f"[ERROR] Failed to upload results for {ticker} with {model} on {feature_set}")
-
-    db_session.close()
+        if not trial_result:
+            print(f"[ERROR] No prediction results generated for {ticker} with {model.__name__} on {feature_set_class.__name__}")
+            return
+        
+        print(f"[INFO] Completed training for {ticker} with {model.__name__} on {feature_set_class.__name__}. Results: {len(trial_result)} windows")
+        
+        if save_result:
+            success = upload_classifier_result_batch(
+                classifier_result_list=trial_result,
+                ticker=param.ticker,
+                db_session=db_session
+            )
+            
+            if success:
+                print(f"[INFO] Uploaded results for {ticker} with {model.__name__} on {feature_set_class.__name__}")
+            else:
+                print(f"[ERROR] Failed to upload results for {ticker} with {model.__name__} on {feature_set_class.__name__}")
+                raise Exception("Failed to upload results to database")
 
 if __name__ == "__main__":
     load_dotenv()
