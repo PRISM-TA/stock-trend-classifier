@@ -18,11 +18,11 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-ticker_list = [ "UTX", "VZ", "WMT", "XOM"]
+ticker_list = [ "AAPL" ]
 model_list = [MLPClassifier_V0]
 feature_list = [PTI]
-upload_result = True  # Whether to upload results to database
-num_processes = 2     # Adjust based on GPU memory capacity
+upload_result = False  # Whether to upload results to database
+num_processes = 1     # Adjust based on GPU memory capacity
 ###########################################
 
 def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: BaseFeatureSet, save_result: bool = False) -> None:
