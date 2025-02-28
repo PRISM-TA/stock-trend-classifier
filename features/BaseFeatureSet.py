@@ -25,7 +25,7 @@ class PTI(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             ).order_by(MarketData.report_date).offset(offset).limit(count)
@@ -52,7 +52,7 @@ class PTI20D(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.start_date)
+                    (MarketData.report_date == SupClassifierDataset.end_date)
                 )
                 .where(MarketData.ticker == ticker)
             ).order_by(MarketData.report_date).offset(offset).limit(count)
@@ -79,7 +79,7 @@ class RTI(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             ).order_by(MarketData.report_date).offset(offset).limit(count)
@@ -106,7 +106,7 @@ class RTI20D(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             ).order_by(MarketData.report_date).offset(offset).limit(count)
@@ -129,7 +129,7 @@ class RMD20D(BaseFeatureSet):
                 .join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             )
@@ -162,7 +162,7 @@ class RMD20DRTI(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             )
@@ -217,7 +217,7 @@ class RMD20DRTI20D(BaseFeatureSet):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
             )
