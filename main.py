@@ -7,6 +7,7 @@ from classifiers.factory.ClassifierFactory import ClassifierFactory
 from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
 from classifiers.CNNClassifier import CNNClassifier_V0
+from classifiers.LSTMClassifier import LSTMClassifier_V0
 
 from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, PTI20D, RTI, RTI20D, RMD20D
 
@@ -18,12 +19,12 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-# ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CVX", "CSCO", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MSFT", "MMM", "MRK", "NKE", "PFE", "PG", "TRV", "UNH", "VZ", "WMT", "XOM" ]
-ticker_list = [ "CAT", "CVX", "CSCO", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MSFT", "MMM", "MRK", "NKE", "PFE", "PG", "TRV", "UNH", "VZ", "WMT", "XOM" ]
-model_list = [CNNClassifier_V0]
-feature_list = [RTI20D]
-upload_result = False  # Whether to upload results to database
-num_processes = 3     # Adjust based on GPU memory capacity
+ticker_list = [ "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD" ]
+# ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
+model_list = [LSTMClassifier_V0]
+feature_list = [PTI20D]
+upload_result = True  # Whether to upload results to database
+num_processes = 1     # Adjust based on GPU memory capacity
 ###########################################
 
 def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: BaseFeatureSet, save_result: bool = False) -> None:
