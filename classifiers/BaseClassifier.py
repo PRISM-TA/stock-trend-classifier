@@ -1,7 +1,9 @@
 from models.BaseHyperParam import BaseHyperParam
-
 import torch
 import torch.nn as nn
+import os
+import json
+from datetime import datetime
 
 
 class BaseClassifier(nn.Module):
@@ -17,9 +19,13 @@ class BaseClassifier(nn.Module):
     def forward():
         pass
 
-    def train_classifier(self, criterion: nn.Module, optimizer: torch.optim.Optimizer, param: BaseHyperParam, train_loader, val_loader=None)->None:
+    def train_classifier(self, criterion: nn.Module, optimizer: torch.optim.Optimizer, param: BaseHyperParam, train_loader, val_loader=None, ticker=None, feature_set=None):
         best_loss = float('inf')
         patience_counter = 0
+        
+        # Initialize lists to store losses
+        train_losses = []
+        val_losses = []
         
         for epoch in range(param.num_epochs):
             self.train()
@@ -42,10 +48,12 @@ class BaseClassifier(nn.Module):
                 optimizer.step()
                 
                 total_loss += loss.item()
+            
+            # Calculate average training loss for this epoch
+            avg_train_loss = total_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
 
-            if param.early_stopping:
-                if val_loader is None:
-                    raise ValueError("Validation data loader is required for early stopping")
+            if val_loader is not None:
                 self.eval()
                 val_loss = 0
                 with torch.no_grad():
@@ -56,17 +64,95 @@ class BaseClassifier(nn.Module):
                         val_outputs = self(val_features)
                         val_loss += criterion(val_outputs, val_labels).item()
                 
-                # if epoch % 50 == 0:
-                #     print(f"Epoch {epoch:3d}: Loss = {total_loss/len(train_loader):.4f}")
+                # Calculate average validation loss
+                avg_val_loss = val_loss / len(val_loader)
+                val_losses.append(avg_val_loss)
                 
-                # Early stopping
-                if val_loss < best_loss:
-                    best_loss = val_loss
-                    patience_counter = 0
-                else:
-                    patience_counter += 1
-                    
-                if patience_counter >= param.patience:
-                    print(f"Early stopping at epoch {epoch}")
-                    break
+                if param.early_stopping:
+                    # Early stopping logic
+                    if avg_val_loss < best_loss:
+                        best_loss = avg_val_loss
+                        patience_counter = 0
+                    else:
+                        patience_counter += 1
+                        
+                    if patience_counter >= param.patience:
+                        print(f"Early stopping at epoch {epoch}")
+                        break
+        
+        # Save loss history at the end of training (outside the epoch loop)
+        loss_file = self.save_loss_history(train_losses, val_losses, param, ticker=ticker, feature_set=feature_set)
+        print(f"Training completed. Loss history saved to {loss_file}")
+        
+        return train_losses, val_losses
+        
 
+    def save_loss_history(self, train_losses, val_losses, param, ticker=None, feature_set=None):
+        """
+        Save training and validation losses to a JSON file in the loss_record folder
+        
+        Args:
+            train_losses: List of training losses
+            val_losses: List of validation losses
+            param: Training hyperparameters
+            ticker: The stock ticker (e.g., 'AAPL')
+            feature_set: The feature set object
+        """
+        # Create loss_record directory if it doesn't exist
+        os.makedirs('loss_record', exist_ok=True)
+        
+        # Create the base filename parts
+        filename_parts = [self.model_name]
+        
+        # Add ticker if provided
+        if ticker:
+            filename_parts.append(ticker)
+        
+        # Add feature set acronym if provided
+        if feature_set:
+            # Get feature set name
+            feature_set_name = feature_set.set_name if hasattr(feature_set, 'set_name') else str(feature_set)
+            
+            # Create acronym (first letter of each word)
+            words = feature_set_name.replace('+', ' ').split()
+            acronym = ''.join(word[0].upper() for word in words)
+            
+            # Add parenthesized content if present
+            if '(' in feature_set_name:
+                start_idx = feature_set_name.find('(')
+                end_idx = feature_set_name.find(')')
+                if end_idx > start_idx:
+                    acronym += feature_set_name[start_idx:end_idx+1]
+                    
+            filename_parts.append(acronym)
+        
+        # Join parts with underscores
+        base_filename = '_'.join(filename_parts)
+        
+        # Add timestamp for uniqueness
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"loss_record/{base_filename}_{timestamp}.json"
+        
+        # Prepare the data to save
+        loss_data = {
+            "model_name": self.model_name,
+            "ticker": ticker,
+            "feature_set": feature_set_name if 'feature_set_name' in locals() else str(feature_set),
+            "hyperparameters": {
+                "learning_rate": getattr(param, 'learning_rate', None),
+                "batch_size": getattr(param, 'batch_size', None),
+                "num_epochs": param.num_epochs,
+                "early_stopping": param.early_stopping,
+                "patience": param.patience if param.early_stopping else None
+            },
+            "train_loss": train_losses,
+            "val_loss": val_losses if val_losses else None,
+            "timestamp": timestamp
+        }
+        
+        # Save to file
+        with open(filename, 'w') as f:
+            json.dump(loss_data, f, indent=4)
+            
+        print(f"Loss history saved to {filename}")
+        return filename
