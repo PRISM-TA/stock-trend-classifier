@@ -1,219 +1,197 @@
-import streamlit as st
 import os
 import json
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import numpy as np
+from matplotlib.ticker import MaxNLocator
+import glob
+import re
 
-def plot_loss_history(filename=None, model_name=None, ticker=None, feature_set=None):
+
+def plot_consolidated_loss_chart(json_files, model_name, ticker=None, feature_set=None, save_path='loss_charts'):
     """
-    Plot loss history from a JSON file or search for a specific combination
+    Creates a consolidated chart of all training sessions for a specific model/ticker/feature set
+    combination and saves it as a PNG.
     
     Args:
-        filename: Path to a specific loss history file
-        model_name: Model name to search for
-        ticker: Ticker symbol to search for
-        feature_set: Feature set name or acronym to search for
-    """
-    if filename is None:
-        # Try to find a matching file based on criteria
-        if not os.path.exists('loss_record'):
-            st.error("No loss_record directory found")
-            return None
-            
-        loss_files = os.listdir('loss_record')
-        if not loss_files:
-            st.error("No loss records found")
-            return None
-        
-        # Filter files based on provided criteria
-        if model_name:
-            loss_files = [f for f in loss_files if model_name in f]
-        if ticker:
-            loss_files = [f for f in loss_files if f"_{ticker}_" in f or f"{ticker}_" in f]
-        if feature_set:
-            # We'll just search for the feature set string directly
-            loss_files = [f for f in loss_files if feature_set in f]
-        
-        if not loss_files:
-            criteria = []
-            if model_name: criteria.append(f"model={model_name}")
-            if ticker: criteria.append(f"ticker={ticker}")
-            if feature_set: criteria.append(f"feature_set={feature_set}")
-            
-            st.error(f"No loss records found matching criteria: {', '.join(criteria)}")
-            return None
-            
-        # Sort by timestamp (newest first)
-        loss_files.sort(reverse=True)
-        filename = os.path.join('loss_record', loss_files[0])
+        json_files: List of JSON file paths with loss data
+        model_name: Name of the model
+        ticker: Stock ticker symbol
+        feature_set: Feature set object or name
+        save_path: Directory to save the chart
     
-    # Load the loss data
-    try:
-        with open(filename, 'r') as f:
-            loss_data = json.load(f)
-    except Exception as e:
-        st.error(f"Error loading loss data: {e}")
+    Returns:
+        The path to the saved chart file
+    """
+    # Ensure save_path is a string
+    if not isinstance(save_path, str):
+        print(f"Warning: save_path is not a string. Using default 'loss_charts' instead of {save_path}")
+        save_path = 'loss_charts'
+    
+    # Create the save directory if it doesn't exist
+    os.makedirs(save_path, exist_ok=True)
+    
+    # Get the feature set name
+    feature_set_name = None
+    if feature_set:
+        if hasattr(feature_set, 'set_name'):
+            feature_set_name = feature_set.set_name
+        else:
+            # If feature_set is a string
+            feature_set_name = str(feature_set)
+    
+    # Create base filename for the chart - use full names for consistency
+    filename_parts = [model_name]
+    if ticker:
+        filename_parts.append(str(ticker))  # Ensure ticker is a string
+    if feature_set_name:
+        # Replace characters that might cause issues in filenames
+        safe_feature_name = feature_set_name.replace('/', '_').replace('\\', '_').replace(':', '_')
+        filename_parts.append(safe_feature_name)
+    
+    base_pattern = '_'.join(filename_parts)
+    
+    if not json_files:
+        print(f"No loss files found for {base_pattern}")
         return None
     
-    # Extract data
-    train_loss = loss_data['train_loss']
-    val_loss = loss_data['val_loss'] if loss_data.get('val_loss') else None
-    model_name = loss_data['model_name']
-    ticker = loss_data.get('ticker', 'Unknown')
-    feature_set_name = loss_data.get('feature_set', 'Unknown')
+    # Set up the plot
+    plt.figure(figsize=(12, 8))
     
-    # Get hyperparameters for the title
-    hyperparams = loss_data['hyperparameters']
+    # Use only two colors: one for training loss, one for validation loss
+    train_color = 'blue'
+    val_color = 'red'
     
-    # Create plot
-    fig, ax = plt.subplots(figsize=(12, 7))
+    # Plot each training session
+    for i, file_path in enumerate(sorted(json_files)):
+        try:
+            with open(file_path, 'r') as f:
+                try:
+                    data = json.load(f)
+                    
+                    # Extract loss data
+                    train_losses = data.get('train_loss', [])
+                    val_losses = data.get('val_loss', [])
+                    
+                    # Get the window number for labeling if available
+                    window_num = data.get('window_num', i)
+                    
+                    # Plot training loss - always using the same color (blue)
+                    plt.plot(train_losses, color=train_color, linestyle='-', alpha=0.7, 
+                             label=f'Train Window' if i == 0 else None)
+                    
+                    # Plot validation loss if available - always using the same color (red)
+                    if val_losses:
+                        plt.plot(val_losses, color=val_color, linestyle='--', alpha=0.7, 
+                                 label=f'Val Window' if i == 0 else None)
+                    
+                except json.JSONDecodeError:
+                    print(f"Error loading JSON from {file_path}")
+        except Exception as e:
+            print(f"Error processing file {file_path}: {e}")
     
-    # Plot data
-    epochs = range(1, len(train_loss) + 1)
-    ax.plot(epochs, train_loss, 'b-', linewidth=1.5, label='Training Loss')
+    # Set up plot aesthetics
+    title_parts = [f'Loss History: {model_name}']
+    if ticker:
+        title_parts.append(str(ticker))
+    if feature_set_name:
+        title_parts.append(feature_set_name)
     
-    if val_loss:
-        ax.plot(epochs, val_loss, 'r-', linewidth=1.5, label='Validation Loss')
+    plt.title(' - '.join(title_parts))
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.grid(True, alpha=0.3)
     
-    # Set title and labels
-    title = f'Training Loss: {model_name}'
-    if ticker != 'Unknown':
-        title += f' - {ticker}'
-    if feature_set_name != 'Unknown':
-        title += f' - {feature_set_name}'
-        
-    ax.set_title(title, fontsize=14)
-    ax.set_xlabel('Epochs', fontsize=12)
-    ax.set_ylabel('Loss', fontsize=12)
+    # Add a legend to explain the colors
+    plt.legend(loc='upper right')
     
-    # Add grid and legend
-    ax.grid(True, linestyle='--', alpha=0.7)
-    ax.legend(fontsize=10)
+    # Add a single line of explanatory text
+    plt.figtext(0.5, 0.01, 
+                f'Chart shows {len(json_files)} training windows. Blue: Training Loss | Red: Validation Loss', 
+                ha='center', fontsize=10)
     
-    # Add a text box with hyperparameters
-    params_text = ""
-    for k, v in hyperparams.items():
-        if v is not None:  # Only include non-None parameters
-            params_text += f"{k}: {v}\n"
+    # Force integer epochs on x-axis
+    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     
-    # Position the text box in the upper right corner
-    if params_text:
-        plt.figtext(0.75, 0.85, params_text.strip(), 
-                    bbox=dict(facecolor='white', edgecolor='gray', alpha=0.8),
-                    fontsize=9)
+    # Add a tight layout - adjusted to leave room for text at the bottom
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     
-    plt.tight_layout()
+    # Save the chart
+    chart_filename = f"{base_pattern}_consolidated.png"
+    chart_path = os.path.join(save_path, chart_filename)
+    plt.savefig(chart_path, dpi=300)
+    plt.close()
     
-    return fig
+    print(f"Consolidated loss chart saved to {chart_path}")
+    return chart_path
 
-def loss_visualizer_app():
-    """Streamlit app for visualizing training loss history"""
-    st.title("Training Loss Visualizer")
-    
-    # Get available loss files
+
+def generate_all_consolidated_charts():
+    """
+    Generate consolidated charts for all unique model/ticker/feature set combinations
+    found in the loss_record directory.
+    """
     if not os.path.exists('loss_record'):
-        st.warning("No loss_record directory found. Train a model first to generate loss records.")
-        return
-        
-    loss_files = os.listdir('loss_record')
-    if not loss_files:
-        st.warning("No loss records found in the loss_record directory.")
+        print("No loss_record directory found")
         return
     
-    # Extract unique model names, tickers, and feature sets from filenames
-    model_names = sorted(list(set([f.split('_')[0] for f in loss_files if '_' in f])))
+    # Track files by their combinations
+    combinations = {}
     
-    # For tickers, look at the second part of the filename
-    tickers = []
-    for f in loss_files:
-        parts = f.split('_')
-        if len(parts) >= 2:
-            tickers.append(parts[1])
-    tickers = sorted(list(set(tickers)))
-    
-    # For feature sets, it's more complex as they can be different formats
-    # We'll extract the third part if it exists
-    feature_sets = []
-    for f in loss_files:
-        parts = f.split('_')
-        if len(parts) >= 3:
-            # The feature set is the third part, but remove any timestamp
-            feature_part = parts[2]
-            # If the part contains numbers only, it might be a timestamp
-            if not feature_part.isdigit():
-                feature_sets.append(feature_part)
-    feature_sets = sorted(list(set(feature_sets)))
-    
-    # Create filter selectors
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        selected_model = st.selectbox("Select Model", ["All"] + model_names)
-    
-    with col2:
-        selected_ticker = st.selectbox("Select Ticker", ["All"] + tickers)
+    # Process all JSON files
+    for filename in os.listdir('loss_record'):
+        if not filename.endswith('.json'):
+            continue
         
-    with col3:
-        selected_feature = st.selectbox("Feature Set", ["All"] + feature_sets)
-    
-    # Filter loss files based on selections
-    filtered_files = loss_files
-    
-    if selected_model != "All":
-        filtered_files = [f for f in filtered_files if f.startswith(f"{selected_model}_")]
-        
-    if selected_ticker != "All":
-        filtered_files = [f for f in filtered_files if f.split('_')[1] == selected_ticker]
-        
-    if selected_feature != "All":
-        filtered_files = [f for f in filtered_files if selected_feature in f]
-    
-    # Format function for displaying files
-    def format_file_display(filename):
+        # Extract model name, ticker, and feature set info (excluding window part)
         parts = filename.split('_')
-        # Extract timestamp from the last part
-        timestamp = parts[-1].split('.')[0]
         
-        # Format the display string
-        display = f"{parts[0]}"  # Model name
-        
-        if len(parts) > 1:
-            display += f" - {parts[1]}"  # Ticker
+        if len(parts) >= 2:  # At minimum model_something.json
+            model_name = parts[0]
             
-        if len(parts) > 2:
-            # Feature set (might be the third part or could include more)
-            feature_part = parts[2]
-            display += f" - {feature_part}"
+            # Extract ticker if present (typically the second part)
+            ticker = parts[1] if len(parts) > 1 else None
             
-        # Add timestamp
-        if timestamp.isdigit() and len(timestamp) >= 8:
-            date = timestamp[:8]
-            time = timestamp[9:] if len(timestamp) > 8 else ""
-            display += f" ({date} {time})"
+            # Extract feature set if present
+            feature_set_part = None
             
-        return display
+            # Check if there's a window part to exclude
+            window_index = -1
+            for i, part in enumerate(parts):
+                if part.startswith('window'):
+                    window_index = i
+                    break
+            
+            # Extract feature set part (anything between ticker and window)
+            if window_index > 2:  # If we have parts between ticker and window
+                feature_set_part = '_'.join(parts[2:window_index])
+            elif len(parts) > 2 and window_index == -1:  # No window, but we have more parts
+                feature_set_part = '_'.join(parts[2:])
+            
+            # Use the combined key to group files
+            key = (model_name, ticker, feature_set_part)
+            
+            if key not in combinations:
+                combinations[key] = []
+            
+            combinations[key].append(os.path.join('loss_record', filename))
     
-    # Display the filtered files for selection
-    if filtered_files:
-        # Sort by timestamp (newest first)
-        filtered_files.sort(reverse=True)
+    # Generate charts for each combination
+    for (model_name, ticker, feature_set_part), files in combinations.items():
+        print(f"Generating chart for {model_name}, {ticker}, {feature_set_part}")
         
-        selected_file = st.selectbox(
-            "Select Training Run", 
-            filtered_files,
-            format_func=format_file_display
+        # Pass the files, model name, ticker, and feature set to the plotting function
+        plot_consolidated_loss_chart(
+            json_files=files,
+            model_name=model_name,
+            ticker=ticker,
+            feature_set=feature_set_part,
+            save_path='loss_charts'
         )
-        
-        # Plot the selected loss history
-        file_path = os.path.join('loss_record', selected_file)
-        fig = plot_loss_history(file_path)
-        
-        if fig:
-            st.pyplot(fig)
-        else:
-            st.error("Error generating the loss plot.")
-    else:
-        st.warning("No training runs found matching the selected criteria.")
+    
+    print(f"Generated {len(combinations)} consolidated charts")
 
+
+# If run as a script
 if __name__ == "__main__":
-    loss_visualizer_app()
+    generate_all_consolidated_charts()

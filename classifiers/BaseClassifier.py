@@ -19,7 +19,8 @@ class BaseClassifier(nn.Module):
     def forward():
         pass
 
-    def train_classifier(self, criterion: nn.Module, optimizer: torch.optim.Optimizer, param: BaseHyperParam, train_loader, val_loader=None, ticker=None, feature_set=None):
+    def train_classifier(self, criterion: nn.Module, optimizer: torch.optim.Optimizer, param: BaseHyperParam, 
+                     train_loader, val_loader=None, ticker=None, feature_set=None, window_num=None):
         best_loss = float('inf')
         patience_counter = 0
         
@@ -81,13 +82,13 @@ class BaseClassifier(nn.Module):
                         break
         
         # Save loss history at the end of training (outside the epoch loop)
-        loss_file = self.save_loss_history(train_losses, val_losses, param, ticker=ticker, feature_set=feature_set)
+        loss_file = self.save_loss_history(train_losses, val_losses, param, ticker=ticker, feature_set=feature_set, window_num=window_num)
         print(f"Training completed. Loss history saved to {loss_file}")
         
         return train_losses, val_losses
         
 
-    def save_loss_history(self, train_losses, val_losses, param, ticker=None, feature_set=None):
+    def save_loss_history(self, train_losses, val_losses, param, ticker=None, feature_set=None, window_num=None):
         """
         Save training and validation losses to a JSON file in the loss_record folder
         
@@ -97,11 +98,12 @@ class BaseClassifier(nn.Module):
             param: Training hyperparameters
             ticker: The stock ticker (e.g., 'AAPL')
             feature_set: The feature set object
+            window_num: The window number for staggered training
         """
         # Create loss_record directory if it doesn't exist
         os.makedirs('loss_record', exist_ok=True)
         
-        # Create the base filename parts
+        # Create filename parts list starting with model name
         filename_parts = [self.model_name]
         
         # Add ticker if provided
@@ -109,35 +111,39 @@ class BaseClassifier(nn.Module):
             filename_parts.append(ticker)
         
         # Add feature set acronym if provided
-        if feature_set:
-            # Get feature set name
-            feature_set_name = feature_set.set_name if hasattr(feature_set, 'set_name') else str(feature_set)
-            
-            # Create acronym (first letter of each word)
+        if feature_set and hasattr(feature_set, 'set_name'):
+            # Split by spaces and get first letter of each word
+            feature_set_name = feature_set.set_name
             words = feature_set_name.replace('+', ' ').split()
             acronym = ''.join(word[0].upper() for word in words)
             
-            # Add parenthesized content if present
+            # Add any parenthesized content
             if '(' in feature_set_name:
                 start_idx = feature_set_name.find('(')
                 end_idx = feature_set_name.find(')')
                 if end_idx > start_idx:
                     acronym += feature_set_name[start_idx:end_idx+1]
-                    
+            
             filename_parts.append(acronym)
         
-        # Join parts with underscores
-        base_filename = '_'.join(filename_parts)
+        # Add window number
+        if window_num is not None:
+            filename_parts.append(f"window{window_num}")
         
-        # Add timestamp for uniqueness
+        # Join parts with underscores
+        filename = f"loss_record/{'_'.join(filename_parts)}.json"
+        
+        # Current timestamp for data inside the file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"loss_record/{base_filename}_{timestamp}.json"
         
         # Prepare the data to save
+        feature_set_name = getattr(feature_set, 'set_name', str(feature_set)) if feature_set else None
+        
         loss_data = {
             "model_name": self.model_name,
             "ticker": ticker,
-            "feature_set": feature_set_name if 'feature_set_name' in locals() else str(feature_set),
+            "feature_set": feature_set_name,
+            "window_num": window_num,
             "hyperparameters": {
                 "learning_rate": getattr(param, 'learning_rate', None),
                 "batch_size": getattr(param, 'batch_size', None),
@@ -153,6 +159,6 @@ class BaseClassifier(nn.Module):
         # Save to file
         with open(filename, 'w') as f:
             json.dump(loss_data, f, indent=4)
-            
+        
         print(f"Loss history saved to {filename}")
         return filename

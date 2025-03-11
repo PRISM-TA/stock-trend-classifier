@@ -9,10 +9,13 @@ from features.BaseFeatureSet import BaseFeatureSet
 
 from lib.data_preprocessing import calculate_class_weights
 
+from scripts.loss_chart import plot_consolidated_loss_chart
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+import os
 from sqlalchemy import select, func
 from sklearn.preprocessing import StandardScaler
 
@@ -42,18 +45,21 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
                 ).where(MarketData.ticker == ticker)
             )
             
-                
             query_result = session.execute(query).all()
             print(f"[DEBUG] available_data_count for {ticker}: {query_result[0][0]}")
             return query_result[0][0]
 
     classifier_result_list = []
+    loss_files = []  # List to collect all loss files for chart generation
 
     available_data_count = get_available_data_count(session, param.ticker) - param.training_day_count
     if available_data_count < 0:
         print(f"[DEBUG] Not enough training data available for {param.ticker}")
+        return classifier_result_list
+    
     training_offset = 0
     prediction_offset = param.training_day_count
+    window_num = 0
 
     while available_data_count > param.prediction_day_count:
         print(f"[DEBUG] Available data count: {available_data_count}")
@@ -72,13 +78,38 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
         # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
-        model.train_classifier(
+        # Train the model with window number
+        train_losses, val_losses = model.train_classifier(
             criterion=criterion,
             optimizer=optimizer,
             train_loader=train_loader,  
             param=model_param,
-            val_loader=train_loader
+            val_loader=train_loader,
+            ticker=param.ticker,
+            feature_set=feature_set,
+            window_num=window_num
         )
+        
+        # Store the loss file path
+        loss_file = f"loss_record/{model.model_name}_{param.ticker}_"
+        if hasattr(feature_set, 'set_name'):
+            # Create acronym for feature set
+            feature_set_name = feature_set.set_name
+            words = feature_set_name.replace('+', ' ').split()
+            acronym = ''.join(word[0].upper() for word in words)
+            
+            # Add any parenthesized content
+            if '(' in feature_set_name:
+                start_idx = feature_set_name.find('(')
+                end_idx = feature_set_name.find(')')
+                if end_idx > start_idx:
+                    acronym += feature_set_name[start_idx:end_idx+1]
+            
+            loss_file += f"{acronym}_"
+        loss_file += f"window{window_num}.json"
+        
+        if os.path.exists(loss_file):
+            loss_files.append(loss_file)
 
         model.eval()
         predictions = []
@@ -103,12 +134,27 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
             'prediction_offset': prediction_offset,
             'probabilities': probabilities, 
             'model': model.model_name,
-            'feature_set': feature_set.set_name
+            'feature_set': feature_set.set_name,
+            'window_num': window_num
         }
         classifier_result_list.append(classifier_result)
 
-        training_offset+=param.prediction_day_count
-        prediction_offset+=param.prediction_day_count
-        available_data_count-=param.prediction_day_count
+        training_offset += param.prediction_day_count
+        prediction_offset += param.prediction_day_count
+        available_data_count -= param.prediction_day_count
+        window_num += 1
+    
+    # After all windows are completed, generate the consolidated loss chart
+    if loss_files:
+        try:
+            plot_consolidated_loss_chart(
+                json_files=loss_files, 
+                model_name=model.model_name, 
+                ticker=param.ticker, 
+                feature_set=feature_set,
+                save_path='loss_charts'  # Explicitly pass a string for save_path
+            )
+        except Exception as e:
+            print(f"Error generating loss chart: {e}")
     
     return classifier_result_list
