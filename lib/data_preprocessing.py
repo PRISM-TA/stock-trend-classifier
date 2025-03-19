@@ -161,14 +161,19 @@ def process_equity_indicators(raw_data) -> pd.DataFrame:
     processed_data['ema_50_normalized'] = 70 * processed_data['ema_50_sta']
     processed_data['ema_200_normalized'] = 120 * processed_data['ema_200_sta']
     
-    # MACD
+    # MACD with expanding window normalization
     for component in ['line', 'signal', 'histogram']:
         col = f'macd_12_26_9_{component}'
         processed_data[f"macd_{component}_sta"] = data[col].pct_change()
         processed_data[f"macd_{component}_sta_no_out"] = remove_outliers(processed_data[f"macd_{component}_sta"])
+        
+        # Use expanding window (cumulative min/max)
+        expanding_min = processed_data[f"macd_{component}_sta_no_out"].expanding().min()
+        expanding_max = processed_data[f"macd_{component}_sta_no_out"].expanding().max()
+        
         processed_data[f'macd_{component}_normalized'] = 2 * (
-            processed_data[f"macd_{component}_sta_no_out"] - processed_data[f"macd_{component}_sta_no_out"].min()
-        ) / (processed_data[f"macd_{component}_sta_no_out"].max() - processed_data[f"macd_{component}_sta_no_out"].min()) - 1
+            processed_data[f"macd_{component}_sta_no_out"] - expanding_min
+        ) / (expanding_max - expanding_min + 1e-8) - 1
         
     # RV
     for period in [10, 20, 30, 60]:
@@ -258,14 +263,19 @@ def process_20_day_equity_indicators(raw_data, lookback_days=20) -> pd.DataFrame
     processed_data['ema_50_normalized'] = 70 * processed_data['ema_50_sta']
     processed_data['ema_200_normalized'] = 120 * processed_data['ema_200_sta']
     
-    # MACD
+    # MACD with expanding window normalization
     for component in ['line', 'signal', 'histogram']:
         col = f'macd_12_26_9_{component}'
         processed_data[f"macd_{component}_sta"] = data[col].pct_change()
         processed_data[f"macd_{component}_sta_no_out"] = remove_outliers(processed_data[f"macd_{component}_sta"])
+        
+        # Use expanding window (cumulative min/max)
+        expanding_min = processed_data[f"macd_{component}_sta_no_out"].expanding().min()
+        expanding_max = processed_data[f"macd_{component}_sta_no_out"].expanding().max()
+        
         processed_data[f'macd_{component}_normalized'] = 2 * (
-            processed_data[f"macd_{component}_sta_no_out"] - processed_data[f"macd_{component}_sta_no_out"].min()
-        ) / (processed_data[f"macd_{component}_sta_no_out"].max() - processed_data[f"macd_{component}_sta_no_out"].min()) - 1
+            processed_data[f"macd_{component}_sta_no_out"] - expanding_min
+        ) / (expanding_max - expanding_min + 1e-8) - 1
     
     # RV
     for period in [10, 20, 30, 60]:
