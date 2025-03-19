@@ -165,14 +165,13 @@ def process_equity_indicators(raw_data) -> pd.DataFrame:
     for component in ['line', 'signal', 'histogram']:
         col = f'macd_12_26_9_{component}'
         processed_data[f"macd_{component}_sta"] = data[col].pct_change()
-        processed_data[f"macd_{component}_sta_no_out"] = remove_outliers(processed_data[f"macd_{component}_sta"])
         
         # Use expanding window (cumulative min/max)
-        expanding_min = processed_data[f"macd_{component}_sta_no_out"].expanding().min()
-        expanding_max = processed_data[f"macd_{component}_sta_no_out"].expanding().max()
+        expanding_min = processed_data[f"macd_{component}_sta"].expanding().min()
+        expanding_max = processed_data[f"macd_{component}_sta"].expanding().max()
         
         processed_data[f'macd_{component}_normalized'] = 2 * (
-            processed_data[f"macd_{component}_sta_no_out"] - expanding_min
+            processed_data[f"macd_{component}_sta"] - expanding_min
         ) / (expanding_max - expanding_min + 1e-8) - 1
         
     # RV
@@ -267,14 +266,13 @@ def process_20_day_equity_indicators(raw_data, lookback_days=20) -> pd.DataFrame
     for component in ['line', 'signal', 'histogram']:
         col = f'macd_12_26_9_{component}'
         processed_data[f"macd_{component}_sta"] = data[col].pct_change()
-        processed_data[f"macd_{component}_sta_no_out"] = remove_outliers(processed_data[f"macd_{component}_sta"])
-        
+
         # Use expanding window (cumulative min/max)
-        expanding_min = processed_data[f"macd_{component}_sta_no_out"].expanding().min()
-        expanding_max = processed_data[f"macd_{component}_sta_no_out"].expanding().max()
+        expanding_min = processed_data[f"macd_{component}_sta"].expanding().min()
+        expanding_max = processed_data[f"macd_{component}_sta"].expanding().max()
         
         processed_data[f'macd_{component}_normalized'] = 2 * (
-            processed_data[f"macd_{component}_sta_no_out"] - expanding_min
+            processed_data[f"macd_{component}_sta"] - expanding_min
         ) / (expanding_max - expanding_min + 1e-8) - 1
     
     # RV
