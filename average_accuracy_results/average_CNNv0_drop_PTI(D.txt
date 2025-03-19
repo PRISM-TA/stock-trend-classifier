@@ -1,0 +1,60 @@
+
+==================================================
+Average Accuracy Analysis
+Model: CNNv0_drop
+Feature Set: processed technical indicators (20 days)
+==================================================
+
+Number of stocks analyzed: 2
+Stocks: AAPL, AXP
+
+Total Predictions Across All Stocks: 6478
+Overall Average Accuracy: 0.8194
+
+Actual Label Distribution:
+Label 0: 2732 (42.17%)
+Label 1: 384 (5.93%)
+Label 2: 3362 (51.90%)
+
+Predicted Label Distribution:
+Label 0: 2819 (43.52%)
+Label 1: 275 (4.25%)
+Label 2: 3384 (52.24%)
+
+Overall Metrics:
+Macro Recall: 0.6385
+Macro Precision: 0.6535
+Macro F1: 0.6438
+
+Downtrend:
+  Recall: 0.8741
+  Precision: 0.8471
+  F1: 0.8604
+
+Sideways:
+  Recall: 0.1953
+  Precision: 0.2727
+  F1: 0.2276
+
+Uptrend:
+  Recall: 0.8462
+  Precision: 0.8407
+  F1: 0.8435
+
+Overall Confusion Matrix:
+                Pred_Downtrend  Pred_Sideways  Pred_Uptrend
+True_Downtrend            2388             58           286
+True_Sideways               56             75           253
+True_Uptrend               375            142          2845
+
+Per-Stock Metrics:
+ticker  predictions  accuracy  recall  precision     f1
+   AXP         3239    0.8234  0.6113     0.6211 0.6126
+  AAPL         3239    0.8154  0.6616     0.6725 0.6664
+
+Accuracy Statistics:
+Mean Accuracy: 0.8194
+Median Accuracy: 0.8194
+Min Accuracy: 0.8154 (AAPL)
+Max Accuracy: 0.8234 (AXP)
+Standard Deviation: 0.0057

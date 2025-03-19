@@ -205,90 +205,114 @@ def process_equity_indicators(raw_data) -> pd.DataFrame:
     result = processed_data[final_features].fillna(0)
     return result
 
-def process_20_day_equity_indicators(raw_data, lookback_days=20) -> pd.DataFrame:
+# def process_20_day_equity_indicators(raw_data, lookback_days=20) -> dict:
+#     """Process technical indicators with preprocessing steps and lookback window"""
+#     # Process your technical indicators first
+#     processed_data = process_equity_indicators(raw_data)
+#     preprocessed_features = processed_data.columns.tolist()
+    
+#     # Fill NaN values in the base processed data
+#     processed_data = processed_data[preprocessed_features].fillna(0)
+    
+#     # Create list of DataFrames to concatenate for the lookback window
+#     dfs_to_concat = []
+    
+#     # Apply lookback window to the preprocessed features
+#     for i in range(lookback_days):
+#         day_suffix = f"_t-{i}" if i > 0 else "_t"
+#         temp_df = processed_data.shift(i).rename(
+#             columns={col: f'{col}{day_suffix}' for col in preprocessed_features}
+#         )
+#         dfs_to_concat.append(temp_df)
+    
+#     # Concatenate all lookback features
+#     result_df = pd.concat(dfs_to_concat, axis=1)
+    
+#     # Create a mask to identify complete vs. incomplete days
+#     complete_days_mask = result_df.notna().all(axis=1)
+    
+#     # Save the complete rows exactly as they are
+#     complete_rows = result_df[complete_days_mask].copy()
+    
+#     # Create a filled version for all rows
+#     result_df_filled = result_df.copy()
+    
+#     # Fill NaN values
+#     for col in result_df_filled.columns:
+#         result_df_filled[col] = result_df_filled[col].fillna(method='ffill').fillna(method='bfill').fillna(0)
+    
+#     # IMPORTANT: Replace the filled values for complete rows with the original values
+#     # This ensures complete rows in 'all' are identical to those in 'complete'
+#     result_df_filled.loc[complete_days_mask] = complete_rows
+    
+#     # Return both DataFrames
+#     # return {
+#     #     'complete': complete_rows,  # Only complete rows
+#     #     'all': result_df_filled     # All rows, with complete rows preserved exactly
+#     # }
+#     return result_df_filled # All rows, with complete rows preserved exactly
+
+# def process_20_day_equity_indicators(raw_data, lookback_days=20) -> dict:
+#     """Process technical indicators with preprocessing steps and lookback window"""
+#     # Process your technical indicators first
+#     processed_data = process_equity_indicators(raw_data)
+#     preprocessed_features = processed_data.columns.tolist()
+    
+#     # Fill NaN values in the base processed data
+#     processed_data = processed_data[preprocessed_features].fillna(0)
+    
+#     # Create list of DataFrames for standard lookback (no filling between shifts)
+#     # This will be used to identify truly complete rows
+#     dfs_to_concat_standard = []
+    
+#     for i in range(lookback_days):
+#         day_suffix = f"_t-{i}" if i > 0 else "_t"
+#         temp_df = processed_data[preprocessed_features].shift(i).rename(
+#             columns={col: f'{col}{day_suffix}' for col in preprocessed_features}
+#         )
+#         dfs_to_concat_standard.append(temp_df)
+    
+#     # Concatenate for standard version (will have NaNs for incomplete rows)
+#     standard_df = pd.concat(dfs_to_concat_standard, axis=1)
+    
+#     # Now create the filled version using your approach
+#     dfs_to_concat_filled = []
+    
+#     # First add the current time (t) data
+#     day_suffix = "_t"
+#     temp_df = processed_data[preprocessed_features].rename(
+#         columns={col: f'{col}{day_suffix}' for col in preprocessed_features}
+#     )
+#     dfs_to_concat_filled.append(temp_df)
+    
+#     # Then add historical data (t-1, t-2, etc.) with forward fill
+#     for i in range(1, lookback_days):
+#         day_suffix = f"_t-{i}"
+#         temp_df = processed_data[preprocessed_features].shift(i)
+        
+#         # Fill NaN with the previous shift's values
+#         for j in range(i-1, -1, -1):
+#             prev_suffix = f"_t-{j}" if j > 0 else "_t"
+#             temp_df = temp_df.fillna(processed_data[preprocessed_features].shift(j))
+        
+#         temp_df = temp_df.rename(
+#             columns={col: f'{col}{day_suffix}' for col in preprocessed_features}
+#         )
+#         dfs_to_concat_filled.append(temp_df)
+    
+#     # Concatenate the filled version
+#     filled_df = pd.concat(dfs_to_concat_filled, axis=1)
+    
+#     # Get complete rows by dropping NaN from standard version
+#     complete_df = standard_df.dropna()
+    
+#     return filled_df 
+
+def process_20_day_equity_indicators(raw_data, lookback_days=20) -> dict:
     """Process technical indicators with preprocessing steps and lookback window"""
-    # Convert raw_data to DataFrame first
-    data = pd.DataFrame([{
-        'report_date': record[0].report_date,
-        'rsi_9': record[1].rsi_9,
-        'rsi_14': record[1].rsi_14,
-        'rsi_20': record[1].rsi_20,
-        'sma_20': record[1].sma_20,
-        'sma_50': record[1].sma_50,
-        'sma_200': record[1].sma_200,
-        'ema_20': record[1].ema_20,
-        'ema_50': record[1].ema_50,
-        'ema_200': record[1].ema_200,
-        'macd_12_26_9_line': record[1].macd_12_26_9_line,
-        'macd_12_26_9_signal': record[1].macd_12_26_9_signal,
-        'macd_12_26_9_histogram': record[1].macd_12_26_9_histogram,
-        'rv_10': record[1].rv_10,
-        'rv_20': record[1].rv_20,
-        'rv_30': record[1].rv_30,
-        'rv_60': record[1].rv_60,
-        'hls_10': record[1].hls_10,
-        'hls_20': record[1].hls_20
-    } for record in raw_data])
-    
-    data.set_index('report_date', inplace=True)
-    
-    # Preprocess indicators
-    processed_data = pd.DataFrame(index=data.index)
-    
-    # RSI
-    processed_data['rsi_9_centered'] = (data['rsi_9'] - 50) / 50
-    processed_data['rsi_14_centered'] = (data['rsi_14'] - 50) / 50
-    processed_data['rsi_20_centered'] = (data['rsi_20'] - 50) / 50
-    
-    # SMA
-    for period in [20, 50, 200]:
-        col = f'sma_{period}'
-        processed_data[f"{col}_sta"] = data[col].pct_change()
-        
-    processed_data['sma_20_normalized'] = 50 * processed_data['sma_20_sta']
-    processed_data['sma_50_normalized'] = 60 * processed_data['sma_50_sta']
-    processed_data['sma_200_normalized'] = 80 * processed_data['sma_200_sta']
-    
-    # EMA
-    for period in [20, 50, 200]:
-        col = f'ema_{period}'
-        processed_data[f"{col}_sta"] = data[col].pct_change()
-        
-    processed_data['ema_20_normalized'] = 50 * processed_data['ema_20_sta']
-    processed_data['ema_50_normalized'] = 70 * processed_data['ema_50_sta']
-    processed_data['ema_200_normalized'] = 120 * processed_data['ema_200_sta']
-    
-    # MACD
-    for component in ['line', 'signal', 'histogram']:
-        col = f'macd_12_26_9_{component}'
-        processed_data[f"macd_{component}_sta"] = data[col].pct_change()
-        processed_data[f"macd_{component}_sta_no_out"] = remove_outliers(processed_data[f"macd_{component}_sta"])
-        processed_data[f'macd_{component}_normalized'] = 2 * (
-            processed_data[f"macd_{component}_sta_no_out"] - processed_data[f"macd_{component}_sta_no_out"].min()
-        ) / (processed_data[f"macd_{component}_sta_no_out"].max() - processed_data[f"macd_{component}_sta_no_out"].min()) - 1
-    
-    # RV
-    for period in [10, 20, 30, 60]:
-        col = f'rv_{period}'
-        processed_data[f"{col}_sta"] = data[col].pct_change()
-            
-    # HLS
-    for period in [10, 20]:
-        col = f'hls_{period}'
-        processed_data[f"{col}_sta"] = data[col].pct_change()
-        
-    processed_data['hls_10_normalized'] = 2 * (processed_data['hls_10_sta'])
-    processed_data['hls_20_normalized'] = 3 * (processed_data['hls_20_sta'])
-    
-    # Define the preprocessed features we want to include
-    preprocessed_features = [
-        'rsi_9_centered', 'rsi_14_centered', 'rsi_20_centered',
-        'sma_20_normalized', 'sma_50_normalized', 'sma_200_normalized',
-        'ema_20_normalized', 'ema_50_normalized', 'ema_200_normalized',
-        'macd_line_normalized', 'macd_signal_normalized', 'macd_histogram_normalized',
-        'hls_10_normalized', 'hls_20_normalized'
-    ]
-    
+    # Process your technical indicators first
+    processed_data = process_equity_indicators(raw_data)
+    preprocessed_features = processed_data.columns.tolist()
     # Fill NaN values
     processed_data = processed_data[preprocessed_features].fillna(0)
     

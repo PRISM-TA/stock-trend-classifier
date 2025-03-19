@@ -7,6 +7,8 @@ from classifiers.factory.ClassifierFactory import ClassifierFactory
 from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
 from classifiers.CNNClassifier import CNNClassifier_V0
+from classifiers.CNNClassifier_drop import CNNClassifier_V0_drop
+from classifiers.CNNClassifier_LOCF import CNNClassifier_V0_LOCF
 from classifiers.LSTMClassifier import LSTMClassifier_V0
 
 from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, PTI20D, RTI, RTI20D, RMD20D
@@ -19,9 +21,9 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-ticker_list = [ "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD" ]
+ticker_list = [ "AAPL", "AXP" ]
 # ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
-model_list = [LSTMClassifier_V0]
+model_list = [CNNClassifier_V0_LOCF]
 feature_list = [PTI20D]
 upload_result = True  # Whether to upload results to database
 num_processes = 1     # Adjust based on GPU memory capacity

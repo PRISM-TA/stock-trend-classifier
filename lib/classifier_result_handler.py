@@ -21,7 +21,7 @@ def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
                 ).join(
                     SupClassifierDataset,
                     (MarketData.ticker == SupClassifierDataset.ticker) &
-                    (MarketData.report_date == SupClassifierDataset.end_date)
+                    (MarketData.report_date == SupClassifierDataset.start_date)
                 )
                 .where(MarketData.ticker == ticker)
                 .order_by(MarketData.report_date)
