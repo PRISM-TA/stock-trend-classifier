@@ -15,7 +15,7 @@ def upload_classifier_result(session, classifier_result_list):
                     ClassifierResult.model == classifier_result_list[0].model,
                     ClassifierResult.feature_set == classifier_result_list[0].feature_set
                 ).delete()
-            print(f"[DEBUG] Deleted {deleted_count} rows from ClassifierResult table for {classifier_result_list[0].ticker}, {classifier_result_list[0].model}, {classifier_result_list[0].feature_set}")
+            print(f"[DEBUG] Deleted {deleted_count} rows (ticker: {classifier_result_list[0].ticker}, model: {classifier_result_list[0].model}, feature_set: {classifier_result_list[0].feature_set})")
             session.bulk_save_objects(classifier_result_list)
             session.commit()
             print(f"[DEBUG] Uploaded {len(classifier_result_list)} rows (ticker: {classifier_result_list[0].ticker}, model: {classifier_result_list[0].model}, feature_set: {classifier_result_list[0].feature_set})")
