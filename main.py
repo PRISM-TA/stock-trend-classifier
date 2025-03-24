@@ -47,7 +47,7 @@ def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: Base
             ticker=ticker
         )
         model_param = BaseHyperParam(
-            num_epochs=1200,
+            num_epochs=2000,
             early_stopping=True,
             patience=50
         )
