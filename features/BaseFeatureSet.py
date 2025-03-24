@@ -6,6 +6,13 @@ from lib.data_preprocessing import process_equity_indicators, process_20_day_equ
 from sqlalchemy import select
 import pandas as pd
 
+class Base20DFeatureSet:
+    def _set_complement_offset_count(self, offset: int, count: int):
+        """This function is to provide the complement data needed to process the first 20 days' data in the window"""
+        if offset - 20 < 0:
+            return offset, count
+        return offset-20, count+20
+
 class BaseFeatureSet:
     set_name: str
     def get_data(self, session, offset: int, count: int, ticker: str):
@@ -38,9 +45,10 @@ class PTI(BaseFeatureSet):
             
             return feature_df, labels_df
         
-class PTI20D(BaseFeatureSet):
+class PTI20D(BaseFeatureSet, Base20DFeatureSet):
     set_name: str = "processed technical indicators (20 days)"
     def get_data(self, session, offset: int, count: int, ticker: str):
+        offset, count = self._set_complement_offset_count(offset, count)
         with session as session:
             ### Processed technical indicators (20 days)
             query = (
@@ -92,9 +100,10 @@ class RTI(BaseFeatureSet):
             
             return feature_df, labels_df
 
-class RTI20D(BaseFeatureSet):
+class RTI20D(BaseFeatureSet, Base20DFeatureSet):
     set_name: str = "raw technical indicators (20 days)"
     def get_data(self, session, offset: int, count: int, ticker: str):
+        offset, count = self._set_complement_offset_count(offset, count)
         with session as session:
             ### Raw technical indicators (20 days)
             query = (
@@ -119,9 +128,10 @@ class RTI20D(BaseFeatureSet):
             
             return feature_df, labels_df
 
-class RMD20D(BaseFeatureSet):
+class RMD20D(BaseFeatureSet, Base20DFeatureSet):
     set_name: str = "Raw market data (20 days)"
     def get_data(self, session, offset: int, count: int, ticker: str):
+        offset, count = self._set_complement_offset_count(offset, count)
         with session as session:        
             ## Raw market data (20 days):
             query = (
@@ -148,9 +158,10 @@ class RMD20D(BaseFeatureSet):
             
             return feature_df, labels_df
         
-class RMD20DRTI(BaseFeatureSet):
+class RMD20DRTI(BaseFeatureSet, Base20DFeatureSet):
     set_name: str = "Raw market data (20 days) + raw technical indicators"
-    def get_data(self, session, offset, count, ticker):
+    def get_data(self, session, offset: int, count: int, ticker: str):
+        offset, count = self._set_complement_offset_count(offset, count)
         with session as session:        
             ### Combine market data and technical indicators:
             query = (
@@ -203,9 +214,10 @@ class RMD20DRTI(BaseFeatureSet):
             
             return feature_df, labels_df
 
-class RMD20DRTI20D(BaseFeatureSet):
+class RMD20DRTI20D(BaseFeatureSet, Base20DFeatureSet):
     set_name: str = "Raw market data (20 days) + raw technical indicators (20 days)"
-    def get_data(self, session, offset, count, ticker):
+    def get_data(self, session, offset: int, count: int, ticker: str):
+        offset, count = self._set_complement_offset_count(offset, count)
         with session as session:        
             ### Combine market data and technical indicators:
             query = (

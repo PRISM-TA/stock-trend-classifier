@@ -1,5 +1,5 @@
 from lib.staggered_training import staggered_training
-from lib.classifier_result_handler import upload_classifier_result_batch
+from lib.classifier_result_handler import upload_classifier_result
 
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
@@ -19,12 +19,12 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-ticker_list = [ "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD" ]
-# ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
-model_list = [LSTMClassifier_V0]
+# ticker_list = [ "AXP"]
+ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
+model_list = [CNNClassifier_V0]
 feature_list = [PTI20D]
 upload_result = True  # Whether to upload results to database
-num_processes = 1     # Adjust based on GPU memory capacity
+num_processes = 3     # Adjust based on GPU memory capacity
 ###########################################
 
 def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: BaseFeatureSet, save_result: bool = False) -> None:
@@ -67,13 +67,12 @@ def run_single_trial(ticker: str, model: BaseClassifier, feature_set_class: Base
             print(f"[ERROR] No prediction results generated for {ticker} with {model.__name__} on {feature_set_class.__name__}")
             return
         
-        print(f"[INFO] Completed training for {ticker} with {model.__name__} on {feature_set_class.__name__}. Results: {len(trial_result)} windows")
+        print(f"[INFO] Completed training for {ticker} with {model.__name__} on {feature_set_class.__name__}.")
         
         if save_result:
-            success = upload_classifier_result_batch(
-                classifier_result_list=trial_result,
-                ticker=param.ticker,
-                db_session=db_session
+            success = upload_classifier_result(
+                session=db_session,
+                classifier_result_list=trial_result
             )
             
             if success:

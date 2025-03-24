@@ -5,6 +5,25 @@ from models.EquityIndicators import EquityIndicators
 from models.SupervisedClassifierDataset import SupClassifierDataset
 import pandas as pd
 
+
+def upload_classifier_result(session, classifier_result_list):
+    try:
+        with session as session:
+            deleted_count = session.query(ClassifierResult)\
+                .filter(
+                    ClassifierResult.ticker == classifier_result_list[0].ticker,
+                    ClassifierResult.model == classifier_result_list[0].model,
+                    ClassifierResult.feature_set == classifier_result_list[0].feature_set
+                ).delete()
+            print(f"[DEBUG] Deleted {deleted_count} rows (ticker: {classifier_result_list[0].ticker}, model: {classifier_result_list[0].model}, feature_set: {classifier_result_list[0].feature_set})")
+            session.bulk_save_objects(classifier_result_list)
+            session.commit()
+            print(f"[DEBUG] Uploaded {len(classifier_result_list)} rows (ticker: {classifier_result_list[0].ticker}, model: {classifier_result_list[0].model}, feature_set: {classifier_result_list[0].feature_set})")
+        return True
+    except Exception as e:
+        print(f"Error uploading predictions: {str(e)}")
+        session.rollback()
+        return False
     
 def upload_classifier_result_batch(classifier_result_list, ticker, db_session):
     try:

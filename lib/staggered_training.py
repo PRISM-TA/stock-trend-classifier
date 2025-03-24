@@ -2,6 +2,7 @@ from models.MarketDataset import MarketDataset
 from models.MarketData import MarketData
 from models.StaggeredTrainingParam import StaggeredTrainingParam
 from models.BaseHyperParam import BaseHyperParam
+from models.ClassifierResult import ClassifierResult
 
 from classifiers.factory.ClassifierFactory import ClassifierFactory
 
@@ -37,7 +38,7 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
         pred_loader = DataLoader(pred_dataset, batch_size=1, shuffle=False)
         return train_loader, pred_loader
     
-    def get_available_data_count(session, ticker, start_date=None):
+    def get_available_data_count(session, ticker):
         with session as session:
             query = (
                 select(
@@ -48,6 +49,19 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
             query_result = session.execute(query).all()
             print(f"[DEBUG] available_data_count for {ticker}: {query_result[0][0]}")
             return query_result[0][0]
+
+    def get_report_date(session, offset, count, ticker):
+        with session as session:
+            query = (
+                select(MarketData.report_date)
+                .where(MarketData.ticker == ticker)
+                .order_by(MarketData.report_date)
+                .offset(offset)
+                .limit(count)
+            )
+            
+            query_result = session.execute(query).all()
+            return [record[0] for record in query_result]
 
     classifier_result_list = []
     loss_files = []  # List to collect all loss files for chart generation
@@ -70,6 +84,8 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
         feat_pred_df, label_pred_df = feature_set.get_data(session, prediction_offset, param.prediction_day_count, param.ticker)
         train_features, train_labels, pred_features, pred_labels = scale_data(feat_train_df, label_train_df, feat_pred_df, label_pred_df)
         train_loader, pred_loader = create_dataloader(train_features, train_labels, pred_features, pred_labels)
+
+        report_date_list = get_report_date(session, prediction_offset, param.prediction_day_count, param.ticker)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = classifier_factory.create_classifier(input_size=train_features.shape[1]).to(device)
@@ -112,38 +128,30 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
             loss_files.append(loss_file)
 
         model.eval()
-        predictions = []
-        actual_labels = []
-        probabilities = []
         with torch.no_grad():
-            for features, labels in pred_loader:
+            for report_date, (features, label) in zip(report_date_list, pred_loader):
                 features = features.to(device)
                 outputs = model(features)
                 # Get probabilities using softmax
                 probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
                 prediction = torch.argmax(outputs, dim=1).item()
-                predictions.append(prediction)
-                actual_labels.append(labels.item())
-                probabilities.append(probs)
-                # print(f"Prediction: {prediction}, Actual Label: {labels.item()}, Probabilities: [{float(probs[0]):.4f}, {float(probs[1]):.4f}, {float(probs[2]):.4f}]")
 
-        classifier_result = {
-            'predictions': predictions,
-            'actual_labels': actual_labels,
-            'training_offset': training_offset,
-            'prediction_offset': prediction_offset,
-            'probabilities': probabilities, 
-            'model': model.model_name,
-            'feature_set': feature_set.set_name,
-            'window_num': window_num
-        }
-        classifier_result_list.append(classifier_result)
-
-        training_offset += param.prediction_day_count
-        prediction_offset += param.prediction_day_count
-        available_data_count -= param.prediction_day_count
-        window_num += 1
-    
+                classifier_result_list.append(
+                    ClassifierResult(
+                        report_date=report_date,
+                        ticker=param.ticker,
+                        model=model.model_name,
+                        feature_set=feature_set.set_name,
+                        uptrend_prob=float(f"{probs[0]:.4f}"),
+                        side_prob=float(f"{probs[1]:.4f}"),
+                        downtrend_prob=float(f"{probs[2]:.4f}"),
+                        predicted_label=int(prediction),
+                        actual_label=int(label.item())
+                    )
+                )
+        training_offset+=param.prediction_day_count
+        prediction_offset+=param.prediction_day_count
+        available_data_count-=param.prediction_day_count
     # After all windows are completed, generate the consolidated loss chart
     if loss_files:
         try:
@@ -155,6 +163,5 @@ def staggered_training(session, param: StaggeredTrainingParam, classifier_factor
                 save_path='loss_charts'  # Explicitly pass a string for save_path
             )
         except Exception as e:
-            print(f"Error generating loss chart: {e}")
-    
+            print(f"Error generating loss chart: {e}")    
     return classifier_result_list
