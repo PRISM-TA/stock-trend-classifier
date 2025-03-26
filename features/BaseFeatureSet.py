@@ -70,7 +70,7 @@ class PTI20D(BaseFeatureSet, Base20DFeatureSet):
             # Processed technical indicators (20 days)
             feature_df = process_20_day_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)      
             labels_df = process_labels([(record[2]) for record in query_result])
-            
+            labels_df = labels_df[len(labels_df)-len(feature_df):]
             return feature_df, labels_df
         
 class RTI(BaseFeatureSet):
@@ -125,7 +125,7 @@ class RTI20D(BaseFeatureSet, Base20DFeatureSet):
             # Raw technical indicators (20 days)
             feature_df = process_20_day_raw_equity_indicators([(record[0], record[1]) for record in query_result], lookback_days=20)      
             labels_df = process_labels([(record[2]) for record in query_result])
-            
+            labels_df = labels_df[len(labels_df)-len(feature_df):]
             return feature_df, labels_df
 
 class RMD20D(BaseFeatureSet, Base20DFeatureSet):
@@ -155,7 +155,7 @@ class RMD20D(BaseFeatureSet, Base20DFeatureSet):
 
             feature_df = process_raw_market_data(market_data, lookback_days=20)
             labels_df = process_labels(labels)
-            
+            labels_df = labels_df[len(labels_df)-len(feature_df):]
             return feature_df, labels_df
         
 class RMD20DRTI(BaseFeatureSet, Base20DFeatureSet):
@@ -211,7 +211,7 @@ class RMD20DRTI(BaseFeatureSet, Base20DFeatureSet):
             feature_df = feature_df.loc[:,~feature_df.columns.duplicated()]
 
             #print("Final feature shape:", feature_df.shape)
-            
+            labels_df = labels_df[len(labels_df)-len(feature_df):]
             return feature_df, labels_df
 
 class RMD20DRTI20D(BaseFeatureSet, Base20DFeatureSet):
@@ -267,5 +267,5 @@ class RMD20DRTI20D(BaseFeatureSet, Base20DFeatureSet):
             feature_df = feature_df.loc[:,~feature_df.columns.duplicated()]
 
             #print("Final feature shape:", feature_df.shape)
-            
+            labels_df = labels_df[len(labels_df)-len(feature_df):]
             return feature_df, labels_df

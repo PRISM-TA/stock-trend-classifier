@@ -19,7 +19,7 @@ import itertools
 import multiprocessing as mp
 
 ############# Trial Setting ###############
-# ticker_list = [ "AXP"]
+# ticker_list = ["CSCO"]
 ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
 model_list = [CNNClassifier_V0]
 feature_list = [PTI20D]
