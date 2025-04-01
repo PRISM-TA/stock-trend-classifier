@@ -8,6 +8,7 @@ from classifiers.BaseClassifier import BaseClassifier
 from classifiers.MLPClassifier import MLPClassifier_V0
 from classifiers.CNNClassifier import CNNClassifier_V0
 from classifiers.LSTMClassifier import LSTMClassifier_V0
+from classifiers.TSMixClassifier import TSMixerClassifier_V0
 
 from features.BaseFeatureSet import BaseFeatureSet, RMD20DRTI20D, RMD20DRTI, PTI, PTI20D, RTI, RTI20D, RMD20D
 
@@ -21,7 +22,7 @@ import multiprocessing as mp
 ############# Trial Setting ###############
 # ticker_list = ["CSCO"]
 ticker_list = [ "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "HD", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", "NKE", "PFE", "PG", "TRV", "UNH", "UTX", "VZ", "WMT", "XOM"]
-model_list = [CNNClassifier_V0]
+model_list = [TSMixerClassifier_V0]
 feature_list = [PTI20D]
 upload_result = True  # Whether to upload results to database
 num_processes = 3     # Adjust based on GPU memory capacity
